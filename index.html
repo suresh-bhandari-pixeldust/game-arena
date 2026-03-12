@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UNO Arena</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="uno">
+      <header class="brand">
+        <div>
+          <p class="eyebrow">Multiplayer UNO</p>
+          <h1>UNO Arena</h1>
+          <p class="subtext">
+            Play hotseat on one device or connect multiple devices online.
+          </p>
+        </div>
+        <div class="status-pill" id="connectionStatus">Local</div>
+      </header>
+
+      <section class="panel setup" id="setupPanel">
+        <div class="mode-toggle" role="tablist" aria-label="Game modes">
+          <button
+            class="mode-btn active"
+            data-mode="local"
+            type="button"
+            role="tab"
+            aria-selected="true"
+          >
+            Same device
+          </button>
+          <button
+            class="mode-btn"
+            data-mode="online"
+            type="button"
+            role="tab"
+            aria-selected="false"
+          >
+            Online room
+          </button>
+        </div>
+
+        <div class="mode-body" id="localSetup" role="tabpanel">
+          <div class="setup-grid">
+            <div class="card-panel">
+              <h2>Players</h2>
+              <label class="field">
+                <span>Player count</span>
+                <div class="stepper">
+                  <button id="playerMinus" type="button">-</button>
+                  <span id="playerCount">3</span>
+                  <button id="playerPlus" type="button">+</button>
+                </div>
+              </label>
+              <div class="player-list" id="playerInputs"></div>
+            </div>
+
+            <div class="card-panel">
+              <h2>House rules</h2>
+              <label class="switch">
+                <input id="ruleUnoPenalty" type="checkbox" checked />
+                <span>Auto penalty if UNO is missed</span>
+              </label>
+              <label class="switch">
+                <input id="ruleStrictWild" type="checkbox" />
+                <span>Enforce Wild Draw Four restrictions</span>
+              </label>
+              <label class="switch">
+                <input id="ruleMustDraw" type="checkbox" checked />
+                <span>Draw only when no playable cards</span>
+              </label>
+              <button id="startLocal" class="primary" type="button">
+                Start local game
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mode-body hidden" id="onlineSetup" role="tabpanel">
+          <div class="setup-grid">
+            <div class="card-panel">
+              <h2>Connect</h2>
+              <label class="field">
+                <span>Your name</span>
+                <input id="onlineName" type="text" placeholder="Player name" />
+              </label>
+              <label class="field">
+                <span>Server URL</span>
+                <input
+                  id="serverUrl"
+                  type="text"
+                  value="ws://localhost:8080"
+                />
+              </label>
+              <label class="field">
+                <span>Room code</span>
+                <input id="roomCode" type="text" placeholder="e.g. F9K2Q" />
+              </label>
+              <div class="button-row">
+                <button id="createRoom" class="primary" type="button">
+                  Create room
+                </button>
+                <button id="joinRoom" type="button">Join room</button>
+              </div>
+              <p class="hint">
+                Run the server to enable online play, then share the room code.
+              </p>
+            </div>
+
+            <div class="card-panel hidden" id="onlineLobby">
+              <div class="lobby-header">
+                <div>
+                  <p class="eyebrow">Room</p>
+                  <h3 id="roomDisplay">----</h3>
+                </div>
+                <button id="copyRoom" type="button">Copy code</button>
+              </div>
+              <div class="lobby-players" id="lobbyPlayers"></div>
+              <div class="lobby-actions">
+                <button id="startOnline" class="primary" type="button">
+                  Start game
+                </button>
+                <button id="leaveRoom" type="button">Leave room</button>
+              </div>
+              <div class="lobby-rules">
+                <label class="switch">
+                  <input id="onlineRuleUnoPenalty" type="checkbox" checked />
+                  <span>Auto penalty if UNO is missed</span>
+                </label>
+                <label class="switch">
+                  <input id="onlineRuleStrictWild" type="checkbox" />
+                  <span>Enforce Wild Draw Four restrictions</span>
+                </label>
+                <label class="switch">
+                  <input id="onlineRuleMustDraw" type="checkbox" checked />
+                  <span>Draw only when no playable cards</span>
+                </label>
+              </div>
+              <p class="hint" id="hostHint">
+                Only the host can start the game.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel game hidden" id="gamePanel">
+        <div class="table-top">
+          <div class="turn-card">
+            <span class="label">Turn</span>
+            <strong id="turnName">-</strong>
+            <span id="turnHint" class="muted">Waiting for game</span>
+          </div>
+          <div class="table-actions">
+            <button id="drawBtn" type="button">Draw</button>
+            <button id="passBtn" type="button">Pass</button>
+            <button id="unoBtn" class="accent" type="button">UNO!</button>
+            <button id="callUnoBtn" type="button">Call UNO</button>
+            <button id="restartLocal" type="button">New game</button>
+          </div>
+        </div>
+
+        <div class="table-center">
+          <div class="pile draw" id="drawPile">
+            <span>Draw</span>
+            <strong id="drawCount">0</strong>
+          </div>
+          <div class="pile discard" id="discardPile"></div>
+          <div class="color-indicator" id="colorIndicator"></div>
+        </div>
+
+        <div class="players" id="playersRow"></div>
+
+        <div class="hand-area">
+          <div class="hand-header">
+            <h2 id="handTitle">Your hand</h2>
+            <span id="handMeta" class="muted"></span>
+          </div>
+          <div class="hand" id="hand"></div>
+        </div>
+
+        <div class="log" id="log"></div>
+      </section>
+    </main>
+
+    <div class="overlay hidden" id="passOverlay" aria-live="polite">
+      <div class="overlay-card">
+        <p class="eyebrow">Pass device</p>
+        <h2 id="passTitle">Next player</h2>
+        <p class="muted" id="passSubtitle">
+          Tap when you're ready to see your hand.
+        </p>
+        <button id="passReady" class="primary" type="button">
+          Show my hand
+        </button>
+      </div>
+    </div>
+
+    <div class="overlay hidden" id="colorOverlay" aria-live="polite">
+      <div class="overlay-card">
+        <p class="eyebrow">Wild card</p>
+        <h2>Choose a color</h2>
+        <div class="color-grid">
+          <button class="color-choice" data-color="red" type="button">
+            Red
+          </button>
+          <button class="color-choice" data-color="yellow" type="button">
+            Yellow
+          </button>
+          <button class="color-choice" data-color="green" type="button">
+            Green
+          </button>
+          <button class="color-choice" data-color="blue" type="button">
+            Blue
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="./snake.js"></script>
+  </body>
+</html>
