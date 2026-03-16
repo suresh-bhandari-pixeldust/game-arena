@@ -1,5 +1,5 @@
 import WebSocket, { WebSocketServer } from "ws";
-import { applyAction, createGame, sanitizeStateForPlayer } from "./game.js";
+import { applyAction, createGame, sanitizeStateForPlayer, getBotMove } from "./game.js";
 
 const PORT = Number(process.env.PORT) || 8080;
 const wss = new WebSocketServer({ port: PORT });
@@ -17,23 +17,70 @@ function broadcastRoom(room) {
   const players = Array.from(room.clients.values()).map((client) => ({
     id: client.id,
     name: client.name,
+    isBot: client.isBot,
   }));
   room.clients.forEach((client) => {
-    send(client.ws, {
-      type: "room_state",
-      room: room.code,
-      hostId: room.hostId,
-      players,
-      started: Boolean(room.state),
-    });
+    if (client.ws) {
+      send(client.ws, {
+        type: "room_state",
+        room: room.code,
+        hostId: room.hostId,
+        players,
+        started: Boolean(room.state),
+      });
+    }
   });
 }
 
+const TURN_DURATION_MS = 30000;
+
 function broadcastGame(room) {
   room.clients.forEach((client) => {
-    const safeState = sanitizeStateForPlayer(room.state, client.id);
-    send(client.ws, { type: "game_state", state: safeState });
+    if (client.ws) {
+      const safeState = sanitizeStateForPlayer(room.state, client.id);
+      // Inject turnEndTime into the broadcasted state
+      send(client.ws, { 
+        type: "game_state", 
+        state: { ...safeState, turnEndTime: room.turnEndTime } 
+      });
+    }
   });
+
+  // Bot & Timer logic
+  if (room.state && room.state.phase === "playing") {
+    const currentPlayer = room.state.players[room.state.currentPlayerIndex];
+    
+    // Clear existing timer if any
+    if (room.turnTimer) clearTimeout(room.turnTimer);
+
+    const now = Date.now();
+    const timeLeft = (room.turnEndTime || (Date.now() + TURN_DURATION_MS)) - now;
+
+    if (currentPlayer.isBot) {
+      // Faster turn for bots
+      room.turnTimer = setTimeout(() => {
+        if (!room.state || room.state.phase !== "playing") return;
+        const botAction = getBotMove(room.state, room.state.currentPlayerIndex);
+        if (botAction) {
+          applyAction(room.state, botAction);
+          room.turnEndTime = Date.now() + TURN_DURATION_MS;
+          broadcastGame(room);
+        }
+      }, 1500);
+    } else {
+      // Auto-play for humans on timeout
+      room.turnTimer = setTimeout(() => {
+        if (!room.state || room.state.phase !== "playing") return;
+        const botAction = getBotMove(room.state, room.state.currentPlayerIndex);
+        if (botAction) {
+          room.state.log.unshift(`${currentPlayer.name} ran out of time!`);
+          applyAction(room.state, botAction);
+          room.turnEndTime = Date.now() + TURN_DURATION_MS;
+          broadcastGame(room);
+        }
+      }, Math.max(0, timeLeft));
+    }
+  }
 }
 
 function removeClient(ws) {
@@ -135,7 +182,7 @@ wss.on("connection", (ws) => {
         send(ws, { type: "error", message: "Room not found." });
         return;
       }
-      if (room.state) {
+      if (room.state && room.state.phase !== "finished") {
         send(ws, { type: "error", message: "Game already started." });
         return;
       }
@@ -151,6 +198,21 @@ wss.on("connection", (ws) => {
       return;
     }
 
+    if (message.type === "add_bot") {
+      const room = rooms.get(ws.roomCode);
+      if (room && room.hostId === clientId && room.clients.size < 6) {
+        const botId = `bot${Math.floor(Math.random() * 10000)}`;
+        room.clients.set(botId, {
+          id: botId,
+          name: `Bot ${room.clients.size}`,
+          isBot: true,
+          ws: null,
+        });
+        broadcastRoom(room);
+      }
+      return;
+    }
+
     const room = rooms.get(ws.roomCode);
     if (!room) {
       send(ws, { type: "error", message: "Join a room first." });
@@ -162,18 +224,25 @@ wss.on("connection", (ws) => {
         send(ws, { type: "error", message: "Only the host can start." });
         return;
       }
-      const players = Array.from(room.clients.values()).map((client) => ({
-        id: client.id,
-        name: client.name,
-      }));
+      const options = message.options || {};
+      const players = Array.from(room.clients.values()).map((client) => {
+        // In Spectator Mode, everyone is treated as a bot by the server logic
+        const isBot = client.isBot || Boolean(options.spectator);
+        return {
+          id: client.id,
+          name: client.name,
+          isBot: isBot
+        };
+      });
       if (players.length < 2) {
         send(ws, { type: "error", message: "Need at least 2 players." });
         return;
       }
       room.state = createGame({
         players,
-        options: message.options || {},
+        options: options,
       });
+      room.turnEndTime = Date.now() + TURN_DURATION_MS;
       broadcastGame(room);
       return;
     }
@@ -201,6 +270,8 @@ wss.on("connection", (ws) => {
         send(ws, { type: "error", message: result.error });
         return;
       }
+      // Reset timer on action
+      room.turnEndTime = Date.now() + TURN_DURATION_MS;
       broadcastGame(room);
       return;
     }

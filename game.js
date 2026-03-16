@@ -104,8 +104,8 @@ function resolveStartOfTurn(state) {
   let guard = 0;
   while (guard < state.players.length + 2) {
     if (state.pendingDraw > 0 || state.pendingSkip) {
+      const target = state.currentPlayerIndex;
       if (state.pendingDraw > 0) {
-        const target = state.currentPlayerIndex;
         drawCards(state, target, state.pendingDraw);
         pushLog(
           state,
@@ -157,6 +157,7 @@ export function createGame({ players, options = {} }) {
   const gamePlayers = players.map((player) => ({
     id: player.id,
     name: player.name,
+    isBot: Boolean(player.isBot),
     hand: [],
   }));
 
@@ -271,7 +272,55 @@ function advanceTurn(state) {
   resolveStartOfTurn(state);
 }
 
+export function getBotMove(state, playerIndex) {
+  const player = state.players[playerIndex];
+  if (!player) return null;
+
+  // 1. If awaiting color
+  if (state.awaitingColor && state.awaitingColorPlayerId === player.id) {
+    const counts = { red: 0, yellow: 0, green: 0, blue: 0 };
+    player.hand.forEach((c) => {
+      if (c.color) counts[c.color] += 1;
+    });
+    const bestColor = Object.keys(counts).reduce((a, b) =>
+      counts[a] > counts[b] ? a : b
+    );
+    return { type: "choose_color", color: bestColor, playerId: player.id };
+  }
+
+  // 2. If pending UNO declaration
+  if (state.unoPendingPlayerId === player.id && !state.unoCalled) {
+    return { type: "declare_uno", playerId: player.id };
+  }
+
+  // 3. If restricted to playing drawn card
+  if (state.drawRestriction && state.drawRestriction.playerId === player.id) {
+    const cardId = state.drawRestriction.cardId;
+    const card = player.hand.find((c) => c.id === cardId);
+    if (isPlayable(card, state, playerIndex)) {
+      return { type: "play_card", cardId, playerId: player.id };
+    } else {
+      return { type: "pass_turn", playerId: player.id };
+    }
+  }
+
+  // 4. Normal play
+  const playable = getPlayableCards(state, playerIndex);
+  if (playable.length > 0) {
+    // Basic priority: Action cards first
+    const action = playable.find((c) => ACTIONS.includes(c.type));
+    const cardToPlay = action || playable[Math.floor(Math.random() * playable.length)];
+    return { type: "play_card", cardId: cardToPlay.id, playerId: player.id };
+  }
+
+  // 5. Must draw
+  return { type: "draw_card", playerId: player.id };
+}
+
 export function applyAction(state, action) {
+  if (!state) {
+    return { state, error: "Game not started." };
+  }
   if (state.phase === "finished") {
     return { state, error: "Game finished." };
   }
