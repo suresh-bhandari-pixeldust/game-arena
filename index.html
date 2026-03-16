@@ -19,7 +19,7 @@
     <main class="uno">
       <header class="brand">
         <div>
-          <p class="eyebrow">Multiplayer UNO</p>
+          <p class="eyebrow">Card Game</p>
           <h1>UNO Arena</h1>
           <p class="subtext">
             Play locally on one device or connect with friends online.
@@ -100,7 +100,7 @@
               </label>
               <label class="switch">
                 <input id="localSpectator" type="checkbox" />
-                <span style="color: var(--system-blue); font-weight: 600;">Spectator Mode (Bots only)</span>
+                <span class="spectator-label">Spectator Mode (Bots only)</span>
               </label>
               <button id="startLocal" class="primary" type="button">
                 Start Game
@@ -122,7 +122,7 @@
                 <input
                   id="serverUrl"
                   type="text"
-                  value="ws://localhost:8080"
+                  placeholder="Auto-detected"
                 />
               </label>
               <label class="field">
@@ -174,7 +174,7 @@
                 </label>
                 <label class="switch">
                   <input id="onlineSpectator" type="checkbox" />
-                  <span style="color: var(--system-blue); font-weight: 600;">Spectator Mode (Bots only)</span>
+                  <span class="spectator-label">Spectator Mode (Bots only)</span>
                 </label>
               </div>
               <p class="hint" id="hostHint">
@@ -187,12 +187,18 @@
 
       <section class="panel game hidden" id="gamePanel">
         <div class="table-top">
-          <div class="turn-card">
-            <h2 id="turnName">-</h2>
-            <div class="timer-container">
-              <div class="timer-bar" id="timerBar"></div>
+          <div class="turn-info">
+            <div class="circular-timer" id="circularTimer">
+              <svg viewBox="0 0 48 48">
+                <circle class="timer-track" cx="24" cy="24" r="20" />
+                <circle class="timer-progress" id="timerProgress" cx="24" cy="24" r="20" />
+              </svg>
+              <span class="timer-text" id="timerText">15</span>
             </div>
-            <p id="turnHint" class="muted">Waiting for game</p>
+            <div class="turn-card">
+              <h2 id="turnName">-</h2>
+              <p id="turnHint" class="muted">Waiting for game</p>
+            </div>
           </div>
           <div class="table-actions">
             <button id="drawBtn" type="button">Draw</button>
@@ -209,24 +215,29 @@
 
         <div class="last-action" id="lastActionText">Game started</div>
 
-        <div class="table-center">
-          <div class="pile draw" id="drawPile">
-            <div class="card-stack">
-              <span class="logo">UNO</span>
+        <div class="table-layout">
+          <div class="seat-top" id="seatTop"></div>
+          <div class="seat-left" id="seatLeft"></div>
+          <div class="table-center">
+            <div class="pile draw" id="drawPile">
+              <div class="card-stack">
+                <span class="logo">UNO</span>
+              </div>
+              <strong id="drawCount">0</strong>
             </div>
-            <strong id="drawCount">0</strong>
+            <div class="direction-indicator" id="directionIndicator">&#8635;</div>
+            <div class="pile discard" id="discardPile">
+              <div class="pile-label">Current Card</div>
+            </div>
           </div>
-          <div class="pile discard" id="discardPile">
-            <div class="pile-label">Current Card</div>
-            <div class="color-indicator" id="colorIndicator"></div>
-          </div>
+          <div class="seat-right" id="seatRight"></div>
         </div>
 
-        <div class="players" id="playersRow"></div>
+        <div class="active-color" id="colorIndicator"></div>
 
         <div class="hand-area">
           <div class="hand-header">
-            <h2 id="handTitle">Your hand</h2>
+            <div class="hand-player-info" id="handPlayerInfo"></div>
             <span id="handMeta" class="muted"></span>
           </div>
           <div class="hand" id="hand"></div>
@@ -234,19 +245,6 @@
 
       </section>
     </main>
-
-    <div class="overlay hidden" id="passOverlay" aria-live="polite">
-      <div class="overlay-card">
-        <p class="eyebrow">Pass device</p>
-        <h2 id="passTitle">Next player</h2>
-        <p class="muted" id="passSubtitle">
-          Tap when you're ready to see your hand.
-        </p>
-        <button id="passReady" class="primary" type="button">
-          Show My Hand
-        </button>
-      </div>
-    </div>
 
     <div class="overlay hidden" id="colorOverlay" aria-live="polite">
       <div class="overlay-card">
@@ -266,6 +264,19 @@
             Blue
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Winner overlay -->
+    <div class="winner-banner hidden" id="winnerBanner">
+      <div class="winner-content">
+        <div class="trophy">&#127942;</div>
+        <h2 id="winnerName">Winner!</h2>
+        <p>Game over</p>
+        <button id="winnerNewGame" class="primary" type="button">Play Again</button>
       </div>
     </div>
 

@@ -406,9 +406,8 @@ export function applyAction(state, action) {
   }
 
   if (type === "pass_turn") {
-    const playable = getPlayableCards(state, playerIndex);
-    if (!state.drawRestriction && playable.length > 0) {
-      return { state, error: "You still have playable cards." };
+    if (!state.drawRestriction) {
+      return { state, error: "You must draw a card first." };
     }
     state.drawRestriction = null;
     pushLog(state, `${state.players[playerIndex].name} passes.`);
@@ -446,13 +445,13 @@ export function applyAction(state, action) {
       state.awaitingColorPlayerId = playerId;
       state.currentColor = null;
       if (card.type === "wild4") {
-        state.pendingDraw += 4;
+        state.pendingDraw = 4;
         state.pendingSkip = true;
       }
     } else {
       state.currentColor = card.color;
       if (card.type === "draw2") {
-        state.pendingDraw += 2;
+        state.pendingDraw = 2;
         state.pendingSkip = true;
       } else if (card.type === "skip") {
         state.pendingSkip = true;

@@ -51,24 +51,44 @@ const ui = {
   drawPile: document.getElementById("drawPile"),
   discardPile: document.getElementById("discardPile"),
   colorIndicator: document.getElementById("colorIndicator"),
-  playersRow: document.getElementById("playersRow"),
+  seatTop: document.getElementById("seatTop"),
+  seatLeft: document.getElementById("seatLeft"),
+  seatRight: document.getElementById("seatRight"),
   hand: document.getElementById("hand"),
-  handTitle: document.getElementById("handTitle"),
+  handPlayerInfo: document.getElementById("handPlayerInfo"),
   handMeta: document.getElementById("handMeta"),
   sidebar: document.getElementById("sidebar"),
   sidebarLogs: document.getElementById("sidebarLogs"),
   toggleLogs: document.getElementById("toggleLogs"),
   closeSidebar: document.getElementById("closeSidebar"),
-  timerBar: document.getElementById("timerBar"),
+  timerProgress: document.getElementById("timerProgress"),
+  timerText: document.getElementById("timerText"),
+  circularTimer: document.getElementById("circularTimer"),
   lastActionText: document.getElementById("lastActionText"),
-  passOverlay: document.getElementById("passOverlay"),
-  passTitle: document.getElementById("passTitle"),
-  passSubtitle: document.getElementById("passSubtitle"),
-  passReady: document.getElementById("passReady"),
   colorOverlay: document.getElementById("colorOverlay"),
   colorChoices: document.querySelectorAll(".color-choice"),
   autoPlayToggle: document.getElementById("autoPlayToggle"),
+  directionIndicator: document.getElementById("directionIndicator"),
+  toast: document.getElementById("toast"),
+  winnerBanner: document.getElementById("winnerBanner"),
+  winnerName: document.getElementById("winnerName"),
+  winnerNewGame: document.getElementById("winnerNewGame"),
 };
+
+const PLAYER_AVATARS = ["🦊", "🐼", "🦁", "🐸", "🐵", "🐯", "🐰", "🐻", "🦄", "🐲"];
+const playerAvatarMap = new Map();
+
+function getPlayerAvatar(playerId) {
+  if (!playerAvatarMap.has(playerId)) {
+    const usedAvatars = new Set(playerAvatarMap.values());
+    const available = PLAYER_AVATARS.filter(a => !usedAvatars.has(a));
+    const avatar = available.length > 0
+      ? available[Math.floor(Math.random() * available.length)]
+      : PLAYER_AVATARS[Math.floor(Math.random() * PLAYER_AVATARS.length)];
+    playerAvatarMap.set(playerId, avatar);
+  }
+  return playerAvatarMap.get(playerId);
+}
 
 let mode = "local";
 let localState = null;
@@ -87,12 +107,25 @@ function showNotice(message) {
   notice = message;
   if (noticeTimeout) {
     clearTimeout(noticeTimeout);
+    noticeTimeout = null;
   }
+  // Show toast notification
+  ui.toast.textContent = message;
+  ui.toast.classList.add("visible");
   noticeTimeout = setTimeout(() => {
     notice = null;
-    render();
-  }, 2000);
-  render();
+    noticeTimeout = null;
+    ui.toast.classList.remove("visible");
+  }, 2200);
+}
+
+function clearNotice() {
+  if (noticeTimeout) {
+    clearTimeout(noticeTimeout);
+    noticeTimeout = null;
+  }
+  notice = null;
+  ui.toast.classList.remove("visible");
 }
 
 function clearLocalTurnTimer() {
@@ -228,17 +261,25 @@ function createBackCard() {
 
 let lastTopCardId = null;
 
+const TIMER_CIRCUMFERENCE = 2 * Math.PI * 20; // r=20, ~125.66
+
 function updateTimer() {
   const state = currentState();
   if (state && state.phase === "playing" && state.turnEndTime) {
     const now = Date.now();
     const total = mode === "local" ? LOCAL_TURN_MS : 30000;
     const remaining = Math.max(0, state.turnEndTime - now);
-    const percent = (remaining / total) * 100;
-    ui.timerBar.style.width = `${percent}%`;
-    ui.timerBar.style.background = percent < 20 ? "var(--red)" : "var(--accent)";
+    const fraction = remaining / total;
+    const offset = TIMER_CIRCUMFERENCE * (1 - fraction);
+    const seconds = Math.ceil(remaining / 1000);
+    ui.timerProgress.style.strokeDashoffset = offset;
+    ui.timerProgress.style.stroke = fraction < 0.2 ? "var(--system-red)" : fraction < 0.5 ? "var(--system-yellow)" : "var(--system-blue)";
+    ui.timerText.textContent = seconds;
+    ui.circularTimer.style.opacity = "1";
   } else {
-    ui.timerBar.style.width = "0%";
+    ui.timerProgress.style.strokeDashoffset = TIMER_CIRCUMFERENCE;
+    ui.timerText.textContent = "";
+    ui.circularTimer.style.opacity = "0.3";
   }
   requestAnimationFrame(updateTimer);
 }
@@ -248,12 +289,18 @@ function render() {
   const state = currentState();
   if (!state) {
     ui.gamePanel.classList.add("hidden");
-    ui.passOverlay.classList.add("hidden");
+
     ui.colorOverlay.classList.add("hidden");
+    ui.winnerBanner.classList.add("hidden");
     return;
   }
 
   ui.gamePanel.classList.remove("hidden");
+
+  // Direction indicator
+  if (ui.directionIndicator) {
+    ui.directionIndicator.classList.toggle("reverse", state.direction === -1);
+  }
 
   const viewingPlayerId = currentViewingPlayerId(state);
   const currentPlayer = state.players[state.currentPlayerIndex];
@@ -270,6 +317,16 @@ function render() {
 
   ui.turnName.textContent = isMyTurn ? "Your Turn" : `${currentPlayer?.name}'s Turn`;
   document.querySelector(".turn-card").classList.toggle("my-turn", isMyTurn);
+  document.querySelector(".hand-area").classList.toggle("my-turn", isMyTurn);
+
+  // Winner banner
+  if (state.phase === "finished" && state.winnerId) {
+    const winner = state.players.find(p => p.id === state.winnerId);
+    ui.winnerBanner.classList.remove("hidden");
+    ui.winnerName.textContent = `${winner?.name || "Someone"} Wins!`;
+  } else {
+    ui.winnerBanner.classList.add("hidden");
+  }
 
   if (notice) {
     ui.turnHint.textContent = notice;
@@ -303,28 +360,117 @@ function render() {
     ui.discardPile.appendChild(cardEl);
   }
 
-  ui.colorIndicator.textContent = currentColor ? currentColor : "";
-  ui.colorIndicator.style.background = currentColor ? `var(--${currentColor})` : "transparent";
+  if (currentColor) {
+    ui.colorIndicator.innerHTML = `<span class="color-label">Active Color</span><span class="color-dot" style="background:var(--${currentColor})"></span><span class="color-name">${currentColor}</span>`;
+    ui.colorIndicator.style.color = currentColor === "yellow" ? "#3a3000" : "#fff";
+    ui.colorIndicator.classList.add("visible");
+  } else {
+    ui.colorIndicator.innerHTML = "";
+    ui.colorIndicator.classList.remove("visible");
+  }
 
-  ui.playersRow.innerHTML = "";
-  state.players.forEach((player) => {
+  // Render opponents around the table edges
+  ui.seatTop.innerHTML = "";
+  ui.seatLeft.innerHTML = "";
+  ui.seatRight.innerHTML = "";
+  const opponents = state.players.filter(p => p.id !== viewingPlayerId);
+
+  // Distribute opponents into seat containers
+  function getSeats(count) {
+    if (count === 1) return [["top"]];
+    if (count === 2) return [["top"], ["top"]];
+    if (count === 3) return [["left"], ["top"], ["right"]];
+    if (count === 4) return [["left"], ["top"], ["top"], ["right"]];
+    // 5+
+    return opponents.map((_, i) => {
+      if (i === 0) return ["left"];
+      if (i === count - 1) return ["right"];
+      return ["top"];
+    });
+  }
+  const seats = getSeats(opponents.length);
+
+  opponents.forEach((player, i) => {
+    const playerIdx = state.players.findIndex(p => p.id === player.id);
     const card = document.createElement("div");
-    card.className = "player-card";
+    card.className = "opponent-card";
     if (player.id === currentPlayer?.id) card.classList.add("active");
+    const cardCount = player.handCount ?? player.hand.length;
+
+    // Left side: avatar + tag
+    const left = document.createElement("div");
+    left.className = "opponent-left";
+    const avatar = document.createElement("div");
+    avatar.className = "player-avatar";
+    avatar.textContent = getPlayerAvatar(player.id);
+    const numTag = document.createElement("span");
+    numTag.className = "player-tag";
+    numTag.textContent = `P${playerIdx + 1}`;
+    left.appendChild(avatar);
+    left.appendChild(numTag);
+
+    // Right side: name + count + mini fan
+    const right = document.createElement("div");
+    right.className = "opponent-right";
     const name = document.createElement("div");
     name.className = "name";
     name.textContent = player.name;
     const count = document.createElement("div");
     count.className = "count";
-    const cardCount = player.handCount ?? player.hand.length;
-    count.textContent = `${cardCount} cards`;
-    card.appendChild(name);
-    card.appendChild(count);
-    ui.playersRow.appendChild(card);
+    count.textContent = `${cardCount} card${cardCount !== 1 ? "s" : ""}`;
+    const fan = document.createElement("div");
+    fan.className = "mini-fan";
+    const displayCount = Math.min(cardCount, 7);
+    for (let j = 0; j < displayCount; j++) {
+      const miniCard = document.createElement("div");
+      miniCard.className = "mini-card";
+      const centerOffset = j - (displayCount - 1) / 2;
+      miniCard.style.transform = `rotate(${centerOffset * 6}deg)`;
+      fan.appendChild(miniCard);
+    }
+    right.appendChild(name);
+    right.appendChild(count);
+    right.appendChild(fan);
+
+    card.appendChild(left);
+    card.appendChild(right);
+
+    if (cardCount === 1) {
+      const badge = document.createElement("div");
+      badge.className = "uno-badge";
+      badge.textContent = "UNO!";
+      card.appendChild(badge);
+    }
+    const seatTarget = seats[i][0];
+    if (seatTarget === "left") ui.seatLeft.appendChild(card);
+    else if (seatTarget === "right") ui.seatRight.appendChild(card);
+    else ui.seatTop.appendChild(card);
   });
 
+  // Render current player info near hand
+  ui.handPlayerInfo.innerHTML = "";
+  if (me) {
+    const avatar = document.createElement("div");
+    avatar.className = "player-avatar small";
+    avatar.textContent = getPlayerAvatar(me.id);
+    const numTag = document.createElement("span");
+    numTag.className = "player-tag";
+    numTag.textContent = `P${meIndex + 1}`;
+    const nameEl = document.createElement("h2");
+    nameEl.textContent = me.name;
+    nameEl.className = "hand-player-name";
+    if (isMyTurn) nameEl.classList.add("my-turn");
+    ui.handPlayerInfo.appendChild(avatar);
+    ui.handPlayerInfo.appendChild(numTag);
+    ui.handPlayerInfo.appendChild(nameEl);
+  } else {
+    const nameEl = document.createElement("h2");
+    nameEl.textContent = viewingPlayerId ? "Hand" : "Spectating";
+    nameEl.className = "hand-player-name";
+    ui.handPlayerInfo.appendChild(nameEl);
+  }
+
   ui.hand.innerHTML = "";
-  ui.handTitle.textContent = me ? `${me.name}'s hand` : (viewingPlayerId ? "Hand" : "Spectating");
 
   if (me) {
     const playableSet = new Set(playableCards.map(c => c.id));
@@ -359,10 +505,10 @@ function render() {
     ui.hand.appendChild(placeholder);
   }
 
-  ui.handMeta.textContent = meIndex >= 0 ? `${me.hand.length} cards | Draw pile ${state.drawPileCount ?? state.drawPile.length}` : "";
+  ui.handMeta.textContent = meIndex >= 0 ? `${me.hand.length} card${me.hand.length !== 1 ? "s" : ""} \u00B7 ${state.drawPileCount ?? state.drawPile.length} in deck` : "";
 
   const canDraw = isMyTurn && state.phase !== "finished" && !state.awaitingColor && !state.drawRestriction && (!state.options.mustDrawOnlyIfNoPlay || playableCards.length === 0);
-  const canPass = isMyTurn && state.phase !== "finished" && !state.awaitingColor && (state.drawRestriction || playableCards.length === 0);
+  const canPass = isMyTurn && state.phase !== "finished" && !state.awaitingColor && !!state.drawRestriction;
 
   ui.drawPile.classList.toggle("disabled", !canDraw);
   ui.drawBtn.disabled = !canDraw;
@@ -433,6 +579,7 @@ function dispatchAction(action) {
     return;
   }
   clearLocalTurnTimer();
+  clearNotice();
   const result = applyAction(localState, action);
   if (result.error) {
     showNotice(result.error);
@@ -467,17 +614,22 @@ function startLocalGame() {
 
 function resetToSetup() {
   clearLocalTurnTimer();
+  clearNotice();
+  playerAvatarMap.clear();
   localState = null; onlineState = null; notice = null;
   autoPlay = false;
   ui.autoPlayToggle.checked = false;
   ui.setupPanel.classList.remove("hidden");
   ui.gamePanel.classList.add("hidden");
   ui.colorOverlay.classList.add("hidden");
+  ui.winnerBanner.classList.add("hidden");
+  ui.toast.classList.remove("visible");
 }
 
 function connectOnline({ create }) {
   const name = ui.onlineName.value.trim() || "Player";
-  const url = ui.serverUrl.value.trim();
+  const wsProtocol = location.protocol === "https:" ? "wss:" : "ws:";
+  const url = ui.serverUrl.value.trim() || `${wsProtocol}//${location.host}`;
   const rawCode = ui.roomCode.value.trim();
   if (!create && !rawCode) {
     showNotice("Enter a room code to join.");
@@ -594,6 +746,7 @@ ui.passBtn.addEventListener("click", () => dispatchAction({ type: "pass_turn", p
 ui.unoBtn.addEventListener("click", () => dispatchAction({ type: "declare_uno", playerId: currentViewingPlayerId(currentState()) }));
 ui.callUnoBtn.addEventListener("click", () => dispatchAction({ type: "call_uno", playerId: currentViewingPlayerId(currentState()) }));
 ui.restartLocal.addEventListener("click", resetToSetup);
+ui.winnerNewGame.addEventListener("click", resetToSetup);
 
 ui.colorChoices.forEach((button) => {
   button.addEventListener("click", () => {
