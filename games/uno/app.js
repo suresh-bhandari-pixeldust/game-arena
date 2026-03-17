@@ -183,6 +183,11 @@ function setMode(nextMode) {
     button.classList.toggle("active", active);
     button.setAttribute("aria-selected", active ? "true" : "false");
   });
+  // Animate the mode slider
+  const slider = document.getElementById("modeSlider");
+  if (slider) {
+    slider.style.transform = nextMode === "online" ? "translateX(100%)" : "translateX(0)";
+  }
   ui.localSetup.classList.toggle("hidden", nextMode !== "local");
   ui.onlineSetup.classList.toggle("hidden", nextMode !== "online");
   ui.restartLocal.classList.toggle("hidden", nextMode !== "local");
