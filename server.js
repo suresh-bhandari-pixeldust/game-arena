@@ -19,6 +19,7 @@ import * as rmcsEngine from "./games/raja-mantri-chor-sipahi/game.js";
 import * as atlasEngine from "./games/atlas/game.js";
 import * as ludoEngine from "./games/ludo/game.js";
 import * as penFightEngine from "./games/pen-fight/game.js";
+import * as businessEngine from "./games/business/game.js";
 
 const PORT = Number(process.env.PORT) || 8888;
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
@@ -38,6 +39,7 @@ const engines = {
   atlas: atlasEngine,
   ludo: ludoEngine,
   "pen-fight": penFightEngine,
+  business: businessEngine,
 };
 
 const MIME_TYPES = {
@@ -333,6 +335,11 @@ wss.on("connection", (ws) => {
       atlas: ["submit_word"],
       ludo: ["roll_dice", "move_token"],
       "pen-fight": ["flick"],
+      business: [
+        "roll_dice", "buy_property", "decline_property", "build_house",
+        "sell_house", "mortgage_property", "unmortgage_property",
+        "pay_jail_fine", "use_jail_card", "end_turn", "declare_bankruptcy",
+      ],
     };
 
     const allowedActions = gameActions[room.gameType] || gameActions.uno;
