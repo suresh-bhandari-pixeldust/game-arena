@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="FLAMES" />
+    <meta name="theme-color" content="#1a0a1e" />
+    <title>FLAMES - The Relationship Predictor</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%231a0a1e'/%3E%3Ctext x='50' y='68' font-family='system-ui' font-size='50' text-anchor='middle'%3E%F0%9F%94%A5%3C/text%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <!-- Floating hearts background -->
+    <div class="hearts-bg" id="heartsBg"></div>
+
+    <main class="flames-app">
+      <!-- Header -->
+      <header class="brand">
+        <a href="../../index.html" class="back-link">Game Arena</a>
+        <h1>FLAMES</h1>
+        <p class="tagline">The classic relationship predictor</p>
+      </header>
+
+      <!-- Input Card -->
+      <section class="card" id="inputCard">
+        <div class="input-area">
+          <div class="name-field">
+            <label for="name1">Your Name</label>
+            <input type="text" id="name1" placeholder="Enter your name..." autocomplete="off" maxlength="40" />
+          </div>
+          <div class="name-field">
+            <label for="name2">Their Name</label>
+            <input type="text" id="name2" placeholder="Enter their name..." autocomplete="off" maxlength="40" />
+          </div>
+          <p class="error-msg" id="errorMsg"></p>
+          <button class="btn-find" id="btnFind">Find Out!</button>
+        </div>
+      </section>
+
+      <!-- Letter Cancellation Display -->
+      <section class="card cancel-display" id="cancelDisplay">
+        <div class="cancel-row">
+          <span class="label" id="labelName1">You</span>
+          <div class="letters" id="lettersA"></div>
+        </div>
+        <div class="cancel-row">
+          <span class="label" id="labelName2">Them</span>
+          <div class="letters" id="lettersB"></div>
+        </div>
+        <div class="remaining-count" id="remainingCount"></div>
+      </section>
+
+      <!-- FLAMES Ring -->
+      <section class="card flames-ring" id="flamesRing">
+        <div class="ring-letters" id="ringLetters"></div>
+        <p class="step-info" id="stepInfo"></p>
+      </section>
+
+      <!-- Result -->
+      <section class="card result-area" id="resultArea">
+        <div class="result-emoji" id="resultEmoji"></div>
+        <div class="result-letter-big" id="resultLetter"></div>
+        <div class="result-meaning" id="resultMeaning"></div>
+        <p class="result-names" id="resultNames"></p>
+        <button class="btn-try-again" id="btnTryAgain">Try Again</button>
+      </section>
+
+      <!-- History -->
+      <section class="card history-section" id="historySection">
+        <h2>Past Results</h2>
+        <div class="history-list" id="historyList">
+          <p class="history-empty">No predictions yet. Try one!</p>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

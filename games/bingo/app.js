@@ -23,6 +23,8 @@ const ui = {
   speedMinus: document.getElementById("speedMinus"),
   speedPlus: document.getElementById("speedPlus"),
   callSpeed: document.getElementById("callSpeed"),
+  dedicatedCaller: document.getElementById("dedicatedCaller"),
+  autoMarkToggle: document.getElementById("autoMarkToggle"),
   localSpectator: document.getElementById("localSpectator"),
   startLocal: document.getElementById("startLocal"),
   onlineName: document.getElementById("onlineName"),
@@ -76,6 +78,7 @@ let noticeTimeout = null;
 let autoCallTimer = null;
 let autoCallSpeed = 3; // seconds
 let lastCurrentNumber = null;
+let autoMark = true;
 
 // ================================================
 // Utilities
@@ -279,12 +282,16 @@ function renderBingoCard(state) {
   const existing = ui.bingoCard.querySelectorAll(".bingo-cell");
   existing.forEach((el) => el.remove());
 
-  if (!player) {
-    // Spectator: show first bot's card
-    const firstPlayer = state.players[0];
-    if (firstPlayer) {
-      ui.cardLabel.textContent = `${firstPlayer.name}'s Card`;
-      renderCardCells(firstPlayer, state);
+  if (!player || player.callerOnly) {
+    // Caller or spectator: show first player with a card
+    const firstWithCard = state.players.find((p) => p.card && !p.callerOnly);
+    if (firstWithCard) {
+      ui.cardLabel.textContent = player?.callerOnly
+        ? `You are the caller — watching ${firstWithCard.name}'s Card`
+        : `${firstWithCard.name}'s Card`;
+      renderCardCells(firstWithCard, state);
+    } else {
+      ui.cardLabel.textContent = "No cards to show";
     }
     return;
   }
@@ -294,6 +301,11 @@ function renderBingoCard(state) {
 }
 
 function renderCardCells(player, state) {
+  const viewingId = currentViewingPlayerId();
+  const isMyCard = player.id === viewingId;
+  const manualMark = !autoMark && isMyCard && !player.isBot;
+  const calledSet = new Set(state.calledNumbers);
+
   // Card is card[col][row], we need to render row by row
   for (let row = 0; row < 5; row++) {
     for (let col = 0; col < 5; col++) {
@@ -315,6 +327,12 @@ function renderCardCells(player, state) {
           if (state.currentNumber === number) {
             cell.classList.add("just-marked");
           }
+        } else if (manualMark && calledSet.has(number) && state.phase === "playing") {
+          // Highlight cells that can be manually marked
+          cell.classList.add("markable");
+          cell.addEventListener("click", () => {
+            dispatchAction({ type: "mark_cell", playerId: viewingId, col, row });
+          });
         }
       }
 
@@ -361,11 +379,13 @@ function renderPlayers(state) {
       row.appendChild(badge);
     }
 
-    const marked = document.createElement("div");
-    marked.className = "player-marked";
-    const count = player.markedCount ?? player.marked.flat().filter(Boolean).length;
-    marked.textContent = `${count} marked`;
-    row.appendChild(marked);
+    if (!player.callerOnly) {
+      const marked = document.createElement("div");
+      marked.className = "player-marked";
+      const count = player.markedCount ?? (player.marked ? player.marked.flat().filter(Boolean).length : 0);
+      marked.textContent = `${count} marked`;
+      row.appendChild(marked);
+    }
 
     ui.playersList.appendChild(row);
   });
@@ -440,18 +460,21 @@ function render() {
     ui.gameHint.textContent = `${state.calledNumbers.length} numbers called`;
   }
 
-  // Call Number button - only for the caller in online mode or manual mode
+  // Call Number button
   if (mode === "online") {
     ui.callNumberBtn.classList.remove("hidden");
     ui.callNumberBtn.disabled = !isCaller || state.phase !== "playing";
   } else {
-    // In local mode, auto-calling is on, but still allow manual call
     ui.callNumberBtn.classList.remove("hidden");
     ui.callNumberBtn.disabled = state.phase !== "playing";
   }
 
-  // Claim Bingo button
-  if (me && state.phase === "playing") {
+  // Claim Bingo button — hide for dedicated caller
+  if (me && me.callerOnly) {
+    ui.claimBingoBtn.disabled = true;
+    ui.claimBingoBtn.classList.add("hidden");
+  } else if (me && me.marked && state.phase === "playing") {
+    ui.claimBingoBtn.classList.remove("hidden");
     const hasBingo = checkBingo(me.marked);
     ui.claimBingoBtn.disabled = !hasBingo;
   } else {
@@ -487,7 +510,9 @@ function startLocalGame() {
   const name = document.getElementById("localName").value.trim() || "Player";
   const botCount = Number(ui.playerCount.textContent);
   const isSpectator = ui.localSpectator.checked;
+  const dedicatedCaller = ui.dedicatedCaller.checked;
   autoCallSpeed = Number(ui.callSpeed.textContent);
+  autoMark = ui.autoMarkToggle.checked;
 
   const players = [];
   // Player 0 is always the host/caller
@@ -502,7 +527,7 @@ function startLocalGame() {
     players.push({ id: "bot_extra", name: "Bot Extra", isBot: true });
   }
 
-  localState = createGame({ players, options: {} });
+  localState = createGame({ players, options: { dedicatedCaller, autoMark } });
   myPlayerId = isSpectator ? null : "p1";
   lastCurrentNumber = null;
   setStatus(isSpectator ? "Spectating" : "Single Player");

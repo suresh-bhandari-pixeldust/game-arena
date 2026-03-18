@@ -8,14 +8,36 @@ import WebSocket, { WebSocketServer } from "ws";
 import * as unoEngine from "./games/uno/game.js";
 import * as bingoEngine from "./games/bingo/game.js";
 import * as trumpEngine from "./games/wwe-trump-cards/game.js";
+import * as footballEngine from "./games/football-trump-cards/game.js";
+import * as handCricketEngine from "./games/hand-cricket/game.js";
+import * as bookCricketEngine from "./games/book-cricket/game.js";
+import * as flamesEngine from "./games/flames/game.js";
+import * as ticTacToeEngine from "./games/tic-tac-toe/game.js";
+import * as dotsBoxesEngine from "./games/dots-and-boxes/game.js";
+import * as npatEngine from "./games/name-place-animal-thing/game.js";
+import * as rmcsEngine from "./games/raja-mantri-chor-sipahi/game.js";
+import * as atlasEngine from "./games/atlas/game.js";
+import * as ludoEngine from "./games/ludo/game.js";
+import * as penFightEngine from "./games/pen-fight/game.js";
 
-const PORT = Number(process.env.PORT) || 8080;
+const PORT = Number(process.env.PORT) || 8888;
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 const engines = {
   uno: unoEngine,
   bingo: bingoEngine,
   "wwe-trump-cards": trumpEngine,
+  "football-trump-cards": footballEngine,
+  "hand-cricket": handCricketEngine,
+  "book-cricket": bookCricketEngine,
+  flames: flamesEngine,
+  "tic-tac-toe": ticTacToeEngine,
+  "dots-and-boxes": dotsBoxesEngine,
+  "name-place-animal-thing": npatEngine,
+  "raja-mantri-chor-sipahi": rmcsEngine,
+  atlas: atlasEngine,
+  ludo: ludoEngine,
+  "pen-fight": penFightEngine,
 };
 
 const MIME_TYPES = {
@@ -96,7 +118,8 @@ function broadcastGame(room) {
   });
 
   // Bot & Timer logic
-  if (room.state && room.state.phase === "playing") {
+  const activePhases = ["playing", "picking", "revealing"];
+  if (room.state && activePhases.includes(room.state.phase)) {
     const engine = getEngine(room);
     const currentPlayer = room.state.players[room.state.currentPlayerIndex];
 
@@ -299,6 +322,17 @@ wss.on("connection", (ws) => {
       uno: ["play_card", "draw_card", "pass_turn", "choose_color", "declare_uno", "call_uno"],
       bingo: ["call_number", "mark_cell", "claim_bingo"],
       "wwe-trump-cards": ["pick_stat", "draw_card"],
+      "football-trump-cards": ["pick_stat", "draw_card"],
+      "hand-cricket": ["pick_number"],
+      "book-cricket": ["open_page"],
+      flames: ["submit_names", "next_step"],
+      "tic-tac-toe": ["place_mark"],
+      "dots-and-boxes": ["draw_line"],
+      "name-place-animal-thing": ["submit_answers", "start_round"],
+      "raja-mantri-chor-sipahi": ["reveal_raja", "guess_chor", "next_round"],
+      atlas: ["submit_word"],
+      ludo: ["roll_dice", "move_token"],
+      "pen-fight": ["flick"],
     };
 
     const allowedActions = gameActions[room.gameType] || gameActions.uno;

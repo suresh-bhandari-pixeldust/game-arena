@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a1628" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Football Stars Trump Cards</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='80'%3E%E2%9A%BD%3C/text%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="football-app">
+      <!-- Header -->
+      <header class="brand">
+        <div>
+          <a href="../../index.html" class="back-link">Game Arena</a>
+          <div class="eyebrow">Football Stars</div>
+          <h1>Football Trump Cards</h1>
+          <p class="subtext">Pick a stat, compare the best footballers. Winner calls the next stat. Collect all cards!</p>
+        </div>
+        <div class="status-pill" id="connectionStatus">Local</div>
+      </header>
+
+      <!-- Setup -->
+      <section class="panel" id="setupPanel">
+        <div class="mode-toggle" role="tablist">
+          <button class="mode-btn active" data-mode="local" role="tab" aria-selected="true">Single Player</button>
+          <button class="mode-btn" data-mode="online" role="tab" aria-selected="false">Online</button>
+        </div>
+
+        <div class="setup-grid">
+          <div id="localSetup">
+            <div class="card-panel">
+              <h2>Local Match</h2>
+              <div class="field">
+                <span>Your Name</span>
+                <input type="text" id="localName" placeholder="Manager" maxlength="16" />
+              </div>
+              <div class="field">
+                <span>Game Mode</span>
+                <div class="mode-toggle" role="tablist" id="gameModeToggle">
+                  <button class="mode-btn active" data-gamemode="alltime" role="tab" aria-selected="true">All-Time Legends</button>
+                  <button class="mode-btn" data-gamemode="current" role="tab" aria-selected="false">Current Season</button>
+                </div>
+              </div>
+              <div class="field">
+                <span>Opponents (bots)</span>
+                <div class="stepper">
+                  <button id="playerMinus">-</button>
+                  <span id="playerCount">1</span>
+                  <button id="playerPlus">+</button>
+                </div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="localSpectator" />
+                <span class="spectator-label">Spectate Only</span>
+              </label>
+              <button class="primary" id="startLocal">Start Match</button>
+            </div>
+          </div>
+
+          <div id="onlineSetup" class="hidden">
+            <div class="card-panel">
+              <h2>Online Match</h2>
+              <div class="field">
+                <span>Your Name</span>
+                <input type="text" id="onlineName" placeholder="Manager" maxlength="16" />
+              </div>
+              <div class="field">
+                <span>Server</span>
+                <input type="text" id="serverUrl" placeholder="Auto-detected" />
+              </div>
+              <div class="field">
+                <span>Room Code</span>
+                <input type="text" id="roomCode" placeholder="Auto-generated" maxlength="6" />
+              </div>
+              <div class="button-row">
+                <button class="primary" id="createRoom">Create Room</button>
+                <button class="accent" id="joinRoom">Join Room</button>
+              </div>
+            </div>
+
+            <div class="card-panel hidden" id="onlineLobby">
+              <div class="lobby-header">
+                <h3 id="roomDisplay">-----</h3>
+                <div class="lobby-actions">
+                  <button id="copyRoom">Copy Code</button>
+                  <button id="shareLan">Share LAN Link</button>
+                </div>
+              </div>
+              <div class="lobby-players" id="lobbyPlayers"></div>
+              <p class="hint" id="hostHint"></p>
+              <div class="button-row">
+                <button id="addBot">+ Add Bot</button>
+                <button class="primary" id="startOnline">Start Match</button>
+                <button id="leaveRoom">Leave</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Game Area -->
+      <section class="game hidden" id="gamePanel">
+        <div class="table-top">
+          <div class="turn-card" id="turnCard">
+            <h2 id="turnName">Waiting...</h2>
+            <p class="muted" id="turnHint">Pick a stat to compare</p>
+          </div>
+          <div class="table-actions">
+            <button id="autoPlayToggle">Auto Play: Off</button>
+            <button id="restartLocal" class="hidden">New Match</button>
+          </div>
+        </div>
+
+        <!-- Live Update Banner -->
+        <div class="live-banner hidden" id="liveBanner">
+          <span class="live-dot"></span>
+          <span id="liveText">Stats updated just now</span>
+        </div>
+
+        <!-- War Pile -->
+        <div class="war-pile-indicator hidden" id="warPileIndicator">
+          <span class="war-icon">&#9876;</span> WAR PILE: <strong id="warPileCount">0</strong> cards
+        </div>
+
+        <!-- Opponents -->
+        <div class="opponents-row" id="opponentsRow"></div>
+
+        <!-- Reveal Area -->
+        <div class="reveal-area hidden" id="revealArea">
+          <h3 class="reveal-title" id="revealTitle">Showdown</h3>
+          <div class="reveal-cards" id="revealCards"></div>
+          <button class="accent next-round-btn hidden" id="nextRoundBtn">Draw Card &amp; Next Round</button>
+        </div>
+
+        <!-- Player Area -->
+        <div class="player-area" id="playerArea">
+          <div class="your-card-section">
+            <div class="hand-header">
+              <div class="hand-player-info" id="handPlayerInfo"></div>
+              <span class="muted" id="handMeta"></span>
+            </div>
+            <div class="your-top-card" id="yourTopCard"></div>
+          </div>
+          <div class="stat-buttons" id="statButtons">
+            <h3>Pick a Stat</h3>
+            <button class="stat-btn" data-stat="goals" id="statGoals">
+              <span class="stat-label">Goals</span>
+              <span class="stat-value">-</span>
+              <div class="stat-bar"><div class="stat-fill" id="barGoals"></div></div>
+            </button>
+            <button class="stat-btn" data-stat="assists" id="statAssists">
+              <span class="stat-label">Assists</span>
+              <span class="stat-value">-</span>
+              <div class="stat-bar"><div class="stat-fill" id="barAssists"></div></div>
+            </button>
+            <button class="stat-btn" data-stat="trophies" id="statTrophies">
+              <span class="stat-label">Trophies</span>
+              <span class="stat-value">-</span>
+              <div class="stat-bar"><div class="stat-fill" id="barTrophies"></div></div>
+            </button>
+            <button class="stat-btn" data-stat="dribbling" id="statDribbling">
+              <span class="stat-label">Dribbling</span>
+              <span class="stat-value">-</span>
+              <div class="stat-bar"><div class="stat-fill" id="barDribbling"></div></div>
+            </button>
+            <button class="stat-btn" data-stat="passing" id="statPassing">
+              <span class="stat-label">Passing</span>
+              <span class="stat-value">-</span>
+              <div class="stat-bar"><div class="stat-fill" id="barPassing"></div></div>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Winner Overlay -->
+      <div class="winner-banner hidden" id="winnerBanner">
+        <div class="winner-content">
+          <div class="trophy">&#9917;</div>
+          <h2 id="winnerName">Champion!</h2>
+          <p>All cards collected!</p>
+          <button class="accent" id="winnerNewGame">New Match</button>
+        </div>
+      </div>
+
+      <!-- Toast -->
+      <div class="toast" id="toast"></div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>Match Log</h2>
+        <button id="closeSidebar">Close</button>
+      </div>
+      <div class="sidebar-content" id="sidebarLogs"></div>
+    </aside>
+    <button class="toggle-logs-btn" id="toggleLogs">Match Log</button>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

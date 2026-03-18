@@ -4,7 +4,46 @@ import {
   getBotMove,
   STATS,
   STAT_LABELS,
+  WRESTLER_VISUALS,
 } from "./game.js";
+
+// ================================================
+// Wrestler SVG Silhouettes
+// ================================================
+function generateWrestlerSVG(silhouette, accentColor) {
+  const c = accentColor || "#fff";
+  const svgs = {
+    salute: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="22" r="14" fill="${c}" opacity="0.3"/><rect x="28" y="38" width="24" height="30" rx="4" fill="${c}" opacity="0.2"/><line x1="52" y1="42" x2="62" y2="28" stroke="${c}" stroke-width="3" opacity="0.4" stroke-linecap="round"/><line x1="28" y1="48" x2="18" y2="58" stroke="${c}" stroke-width="3" opacity="0.3" stroke-linecap="round"/><rect x="32" y="68" width="6" height="22" rx="3" fill="${c}" opacity="0.2"/><rect x="42" y="68" width="6" height="22" rx="3" fill="${c}" opacity="0.2"/></svg>`,
+    eyebrow: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="22" r="14" fill="${c}" opacity="0.3"/><path d="M30 18 Q40 12 50 18" stroke="${c}" stroke-width="2.5" opacity="0.5" fill="none"/><rect x="28" y="38" width="24" height="28" rx="4" fill="${c}" opacity="0.2"/><line x1="52" y1="44" x2="64" y2="36" stroke="${c}" stroke-width="3" opacity="0.3" stroke-linecap="round"/><line x1="28" y1="44" x2="16" y2="36" stroke="${c}" stroke-width="3" opacity="0.3" stroke-linecap="round"/><rect x="32" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/><rect x="42" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/></svg>`,
+    hat: `<svg viewBox="0 0 80 100" fill="none"><rect x="22" y="12" width="36" height="4" rx="2" fill="${c}" opacity="0.4"/><rect x="30" y="4" width="20" height="12" rx="3" fill="${c}" opacity="0.3"/><circle cx="40" cy="28" r="12" fill="${c}" opacity="0.25"/><rect x="28" y="42" width="24" height="30" rx="4" fill="${c}" opacity="0.2"/><path d="M30 42 L26 72 M50 42 L54 72" stroke="${c}" stroke-width="2" opacity="0.15"/><rect x="32" y="72" width="6" height="20" rx="3" fill="${c}" opacity="0.2"/><rect x="42" y="72" width="6" height="20" rx="3" fill="${c}" opacity="0.2"/></svg>`,
+    sledgehammer: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="22" r="14" fill="${c}" opacity="0.3"/><rect x="28" y="38" width="24" height="28" rx="4" fill="${c}" opacity="0.2"/><line x1="52" y1="42" x2="70" y2="20" stroke="${c}" stroke-width="2.5" opacity="0.4" stroke-linecap="round"/><rect x="65" y="12" width="12" height="8" rx="2" fill="${c}" opacity="0.35"/><rect x="32" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/><rect x="42" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/></svg>`,
+    mask: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="22" r="14" fill="${c}" opacity="0.3"/><path d="M28 18 Q40 10 52 18 Q52 30 40 34 Q28 30 28 18Z" fill="${c}" opacity="0.2"/><circle cx="34" cy="22" r="3" fill="${c}" opacity="0.4"/><circle cx="46" cy="22" r="3" fill="${c}" opacity="0.4"/><rect x="28" y="38" width="24" height="28" rx="4" fill="${c}" opacity="0.2"/><rect x="32" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/><rect x="42" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/></svg>`,
+    flex: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="20" r="12" fill="${c}" opacity="0.3"/><rect x="28" y="34" width="24" height="28" rx="4" fill="${c}" opacity="0.2"/><path d="M52 38 L62 28 L68 36" stroke="${c}" stroke-width="4" opacity="0.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M28 38 L18 28 L12 36" stroke="${c}" stroke-width="4" opacity="0.4" stroke-linecap="round" stroke-linejoin="round"/><rect x="32" y="62" width="6" height="28" rx="3" fill="${c}" opacity="0.2"/><rect x="42" y="62" width="6" height="28" rx="3" fill="${c}" opacity="0.2"/></svg>`,
+    trenchcoat: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="20" r="12" fill="${c}" opacity="0.3"/><path d="M24 36 L28 36 L28 80 L20 80Z" fill="${c}" opacity="0.15"/><path d="M52 36 L56 36 L60 80 L52 80Z" fill="${c}" opacity="0.15"/><rect x="28" y="34" width="24" height="34" rx="4" fill="${c}" opacity="0.2"/><rect x="32" y="68" width="6" height="22" rx="3" fill="${c}" opacity="0.2"/><rect x="42" y="68" width="6" height="22" rx="3" fill="${c}" opacity="0.2"/></svg>`,
+    fire: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="22" r="14" fill="${c}" opacity="0.3"/><path d="M20 90 Q20 60 30 50 Q25 70 40 55 Q55 70 50 50 Q60 60 60 90Z" fill="${c}" opacity="0.15"/><rect x="28" y="38" width="24" height="28" rx="4" fill="${c}" opacity="0.2"/><rect x="32" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/><rect x="42" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/></svg>`,
+    giant: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="18" r="16" fill="${c}" opacity="0.3"/><rect x="24" y="36" width="32" height="34" rx="5" fill="${c}" opacity="0.2"/><rect x="30" y="70" width="8" height="24" rx="4" fill="${c}" opacity="0.2"/><rect x="42" y="70" width="8" height="24" rx="4" fill="${c}" opacity="0.2"/><line x1="24" y1="44" x2="12" y2="58" stroke="${c}" stroke-width="4" opacity="0.3" stroke-linecap="round"/><line x1="56" y1="44" x2="68" y2="58" stroke="${c}" stroke-width="4" opacity="0.3" stroke-linecap="round"/></svg>`,
+    beast: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="20" r="14" fill="${c}" opacity="0.3"/><rect x="26" y="36" width="28" height="30" rx="4" fill="${c}" opacity="0.25"/><path d="M54 40 L66 30 L70 40" stroke="${c}" stroke-width="4" opacity="0.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M26 40 L14 30 L10 40" stroke="${c}" stroke-width="4" opacity="0.4" stroke-linecap="round" stroke-linejoin="round"/><rect x="32" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/><rect x="42" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/></svg>`,
+    middlefinger: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="22" r="13" fill="${c}" opacity="0.3"/><rect x="28" y="38" width="24" height="28" rx="4" fill="${c}" opacity="0.2"/><line x1="52" y1="44" x2="66" y2="32" stroke="${c}" stroke-width="3" opacity="0.4" stroke-linecap="round"/><line x1="28" y1="44" x2="14" y2="32" stroke="${c}" stroke-width="3" opacity="0.4" stroke-linecap="round"/><rect x="32" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/><rect x="42" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/><text x="40" y="16" text-anchor="middle" font-size="10" fill="${c}" opacity="0.5">3:16</text></svg>`,
+    heartbreak: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="22" r="13" fill="${c}" opacity="0.3"/><path d="M32 14 C28 8 20 10 22 18 L40 32 L58 18 C60 10 52 8 48 14" fill="${c}" opacity="0.2"/><rect x="28" y="38" width="24" height="28" rx="4" fill="${c}" opacity="0.2"/><rect x="32" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/><rect x="42" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/></svg>`,
+    viper: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="22" r="13" fill="${c}" opacity="0.3"/><rect x="28" y="38" width="24" height="28" rx="4" fill="${c}" opacity="0.2"/><path d="M40 80 Q30 70 28 62" stroke="${c}" stroke-width="2" opacity="0.3" fill="none"/><line x1="28" y1="42" x2="16" y2="52" stroke="${c}" stroke-width="3" opacity="0.3" stroke-linecap="round"/><line x1="52" y1="42" x2="64" y2="52" stroke="${c}" stroke-width="3" opacity="0.3" stroke-linecap="round"/><rect x="32" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/><rect x="42" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/></svg>`,
+    armsleeves: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="22" r="13" fill="${c}" opacity="0.3"/><rect x="28" y="38" width="24" height="28" rx="4" fill="${c}" opacity="0.2"/><line x1="52" y1="42" x2="66" y2="56" stroke="${c}" stroke-width="4" opacity="0.3" stroke-linecap="round"/><line x1="28" y1="42" x2="14" y2="56" stroke="${c}" stroke-width="4" opacity="0.3" stroke-linecap="round"/><line x1="14" y1="56" x2="14" y2="42" stroke="${c}" stroke-width="2" opacity="0.2" stroke-linecap="round"/><line x1="66" y1="56" x2="66" y2="42" stroke="${c}" stroke-width="2" opacity="0.2" stroke-linecap="round"/><rect x="32" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/><rect x="42" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/></svg>`,
+    countdown: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="22" r="13" fill="${c}" opacity="0.3"/><rect x="28" y="38" width="24" height="28" rx="4" fill="${c}" opacity="0.2"/><line x1="52" y1="42" x2="64" y2="34" stroke="${c}" stroke-width="3" opacity="0.3" stroke-linecap="round"/><line x1="28" y1="42" x2="16" y2="34" stroke="${c}" stroke-width="3" opacity="0.3" stroke-linecap="round"/><rect x="32" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/><rect x="42" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/></svg>`,
+    medal: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="22" r="13" fill="${c}" opacity="0.3"/><circle cx="40" cy="10" r="5" fill="${c}" opacity="0.35"/><text x="40" y="13" text-anchor="middle" font-size="7" font-weight="bold" fill="#000" opacity="0.3">G</text><rect x="28" y="38" width="24" height="28" rx="4" fill="${c}" opacity="0.2"/><rect x="32" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/><rect x="42" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/></svg>`,
+    spinarooni: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="22" r="13" fill="${c}" opacity="0.3"/><rect x="28" y="38" width="24" height="28" rx="4" fill="${c}" opacity="0.2"/><ellipse cx="40" cy="80" rx="20" ry="4" fill="${c}" opacity="0.15"/><line x1="52" y1="44" x2="64" y2="36" stroke="${c}" stroke-width="3" opacity="0.3" stroke-linecap="round"/><line x1="28" y1="44" x2="16" y2="36" stroke="${c}" stroke-width="3" opacity="0.3" stroke-linecap="round"/><rect x="32" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/><rect x="42" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/></svg>`,
+    kick: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="22" r="13" fill="${c}" opacity="0.3"/><rect x="28" y="38" width="24" height="26" rx="4" fill="${c}" opacity="0.2"/><line x1="52" y1="44" x2="66" y2="34" stroke="${c}" stroke-width="3" opacity="0.3" stroke-linecap="round"/><line x1="28" y1="44" x2="14" y2="34" stroke="${c}" stroke-width="3" opacity="0.3" stroke-linecap="round"/><rect x="32" y="64" width="6" height="14" rx="3" fill="${c}" opacity="0.2"/><path d="M42 64 L42 76 L58 68" stroke="${c}" stroke-width="3" opacity="0.3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
+    bald: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="22" r="15" fill="${c}" opacity="0.3"/><ellipse cx="40" cy="24" rx="12" ry="10" fill="${c}" opacity="0.1"/><rect x="26" y="40" width="28" height="30" rx="5" fill="${c}" opacity="0.25"/><path d="M54 44 L66 34 L70 42" stroke="${c}" stroke-width="4" opacity="0.35" stroke-linecap="round" stroke-linejoin="round"/><path d="M26 44 L14 34 L10 42" stroke="${c}" stroke-width="4" opacity="0.35" stroke-linecap="round" stroke-linejoin="round"/><rect x="32" y="70" width="6" height="22" rx="3" fill="${c}" opacity="0.2"/><rect x="42" y="70" width="6" height="22" rx="3" fill="${c}" opacity="0.2"/></svg>`,
+    towering: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="14" r="12" fill="${c}" opacity="0.3"/><rect x="24" y="28" width="32" height="40" rx="5" fill="${c}" opacity="0.2"/><rect x="28" y="68" width="10" height="26" rx="4" fill="${c}" opacity="0.2"/><rect x="42" y="68" width="10" height="26" rx="4" fill="${c}" opacity="0.2"/></svg>`,
+    straightedge: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="22" r="13" fill="${c}" opacity="0.3"/><text x="40" y="14" text-anchor="middle" font-size="8" font-weight="bold" fill="${c}" opacity="0.4">X</text><rect x="28" y="38" width="24" height="28" rx="4" fill="${c}" opacity="0.2"/><line x1="28" y1="44" x2="14" y2="52" stroke="${c}" stroke-width="3" opacity="0.3" stroke-linecap="round"/><line x1="52" y1="44" x2="66" y2="52" stroke="${c}" stroke-width="3" opacity="0.3" stroke-linecap="round"/><rect x="32" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/><rect x="42" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/></svg>`,
+    robe: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="20" r="12" fill="${c}" opacity="0.3"/><path d="M20 34 L28 34 L28 78 L16 78Z" fill="${c}" opacity="0.2"/><path d="M52 34 L60 34 L64 78 L52 78Z" fill="${c}" opacity="0.2"/><rect x="28" y="34" width="24" height="34" rx="4" fill="${c}" opacity="0.15"/><path d="M16 78 Q40 84 64 78" stroke="${c}" stroke-width="2" opacity="0.2" fill="none"/><rect x="32" y="68" width="6" height="22" rx="3" fill="${c}" opacity="0.2"/><rect x="42" y="68" width="6" height="22" rx="3" fill="${c}" opacity="0.2"/></svg>`,
+    powerlifter: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="18" r="14" fill="${c}" opacity="0.3"/><rect x="24" y="34" width="32" height="32" rx="5" fill="${c}" opacity="0.25"/><line x1="10" y1="42" x2="70" y2="42" stroke="${c}" stroke-width="4" opacity="0.3" stroke-linecap="round"/><circle cx="8" cy="42" r="6" fill="${c}" opacity="0.2"/><circle cx="72" cy="42" r="6" fill="${c}" opacity="0.2"/><rect x="30" y="66" width="8" height="26" rx="4" fill="${c}" opacity="0.2"/><rect x="42" y="66" width="8" height="26" rx="4" fill="${c}" opacity="0.2"/></svg>`,
+    lowrider: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="22" r="13" fill="${c}" opacity="0.3"/><rect x="28" y="38" width="24" height="28" rx="4" fill="${c}" opacity="0.2"/><rect x="32" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/><rect x="42" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/><text x="40" y="16" text-anchor="middle" font-size="7" fill="${c}" opacity="0.4">VIVA</text></svg>`,
+    sumo: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="18" r="14" fill="${c}" opacity="0.3"/><ellipse cx="40" cy="52" rx="22" ry="20" fill="${c}" opacity="0.2"/><rect x="28" y="72" width="10" height="20" rx="5" fill="${c}" opacity="0.2"/><rect x="42" y="72" width="10" height="20" rx="5" fill="${c}" opacity="0.2"/></svg>`,
+    hulkup: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="20" r="13" fill="${c}" opacity="0.3"/><rect x="28" y="36" width="24" height="28" rx="4" fill="${c}" opacity="0.2"/><path d="M52 40 L60 26 L66 34" stroke="${c}" stroke-width="4" opacity="0.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M28 40 L20 26 L14 34" stroke="${c}" stroke-width="4" opacity="0.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 36 L50 36" stroke="${c}" stroke-width="2" opacity="0.3"/><rect x="32" y="64" width="6" height="26" rx="3" fill="${c}" opacity="0.2"/><rect x="42" y="64" width="6" height="26" rx="3" fill="${c}" opacity="0.2"/></svg>`,
+    shades: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="22" r="13" fill="${c}" opacity="0.3"/><rect x="26" y="18" width="12" height="6" rx="2" fill="${c}" opacity="0.4"/><rect x="42" y="18" width="12" height="6" rx="2" fill="${c}" opacity="0.4"/><line x1="38" y1="21" x2="42" y2="21" stroke="${c}" stroke-width="1.5" opacity="0.4"/><rect x="28" y="38" width="24" height="28" rx="4" fill="${c}" opacity="0.2"/><rect x="32" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/><rect x="42" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/></svg>`,
+    ropes: `<svg viewBox="0 0 80 100" fill="none"><circle cx="40" cy="22" r="13" fill="${c}" opacity="0.3"/><rect x="28" y="38" width="24" height="28" rx="4" fill="${c}" opacity="0.2"/><path d="M52 42 L68 28 L72 36" stroke="${c}" stroke-width="3.5" opacity="0.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M28 42 L12 28 L8 36" stroke="${c}" stroke-width="3.5" opacity="0.4" stroke-linecap="round" stroke-linejoin="round"/><line x1="4" y1="50" x2="76" y2="50" stroke="${c}" stroke-width="1.5" opacity="0.15"/><line x1="4" y1="58" x2="76" y2="58" stroke="${c}" stroke-width="1.5" opacity="0.1"/><rect x="32" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/><rect x="42" y="66" width="6" height="24" rx="3" fill="${c}" opacity="0.2"/></svg>`,
+  };
+  return svgs[silhouette] || svgs.flex;
+}
 
 // ================================================
 // DOM References
@@ -46,6 +85,7 @@ const ui = {
   revealArea: document.getElementById("revealArea"),
   revealTitle: document.getElementById("revealTitle"),
   revealCards: document.getElementById("revealCards"),
+  nextRoundBtn: document.getElementById("nextRoundBtn"),
   playerArea: document.getElementById("playerArea"),
   handPlayerInfo: document.getElementById("handPlayerInfo"),
   handMeta: document.getElementById("handMeta"),
@@ -173,12 +213,14 @@ function render() {
   } else if (state.phase === "finished" && state.winnerId) {
     const winner = state.players.find((p) => p.id === state.winnerId);
     ui.turnHint.textContent = winner ? `${winner.name} is the champion!` : "Match over.";
+  } else if (state.phase === "revealing" && isMyTurn) {
+    ui.turnHint.textContent = "Round over — draw your next card!";
+  } else if (state.phase === "revealing") {
+    ui.turnHint.textContent = `Waiting for ${currentPlayer?.name} to draw...`;
   } else if (state.phase === "picking" && isMyTurn) {
     ui.turnHint.textContent = "Pick a stat to compare";
   } else if (state.phase === "picking") {
     ui.turnHint.textContent = `Waiting for ${currentPlayer?.name} to pick...`;
-  } else if (state.phase === "revealing") {
-    ui.turnHint.textContent = "Comparing cards...";
   } else {
     ui.turnHint.textContent = "Waiting...";
   }
@@ -259,7 +301,17 @@ function render() {
       if (isWinner) div.classList.add("winner");
       if (isLoser) div.classList.add("loser");
 
+      const [c1, c2] = rc.card.colors || ["#333", "#666"];
+      const imgHtml = rc.card.img
+        ? `<img class="rc-photo" src="./assets/${rc.card.img}" alt="${rc.card.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">`
+        : "";
+      const fallbackSvg = generateWrestlerSVG("flex", c2);
+
       div.innerHTML = `
+        <div class="rc-portrait" style="background:linear-gradient(135deg,${c1},${c2})">
+          ${imgHtml}
+          <div class="rc-silhouette" style="${rc.card.img ? "display:none" : ""}">${fallbackSvg}</div>
+        </div>
         <div class="rc-player">${state.players[rc.playerIndex].name}</div>
         <div class="rc-name">${rc.card.name}</div>
         <div class="rc-stat-label">${STAT_LABELS[stat]}</div>
@@ -267,6 +319,17 @@ function render() {
         <div class="rc-bar"><div class="rc-bar-fill" style="width:${rc.card[stat]}%"></div></div>
       `;
       ui.revealCards.appendChild(div);
+    }
+
+    // Show "Next Round" button only during revealing phase for current player
+    if (state.phase === "revealing" && isMyTurn) {
+      ui.nextRoundBtn.classList.remove("hidden");
+      ui.nextRoundBtn.disabled = false;
+    } else if (state.phase === "revealing") {
+      ui.nextRoundBtn.classList.remove("hidden");
+      ui.nextRoundBtn.disabled = true;
+    } else {
+      ui.nextRoundBtn.classList.add("hidden");
     }
   } else {
     ui.revealArea.classList.add("hidden");
@@ -298,39 +361,55 @@ function render() {
     if (isMyTurn) ui.yourTopCard.classList.add("active-turn");
     else ui.yourTopCard.classList.remove("active-turn");
 
+    // Set card colors via CSS custom properties
+    const [c1, c2] = topCard.colors || ["#333", "#666"];
+    ui.yourTopCard.style.setProperty("--card-color-1", c1);
+    ui.yourTopCard.style.setProperty("--card-color-2", c2);
+
+    // Wrestler portrait area
+    const portrait = document.createElement("div");
+    portrait.className = "wrestler-portrait";
+    portrait.style.background = `linear-gradient(135deg, ${c1}, ${c2})`;
+
+    if (topCard.img) {
+      const img = document.createElement("img");
+      img.className = "wrestler-photo";
+      img.src = `./assets/${topCard.img}`;
+      img.alt = topCard.name;
+      img.onerror = () => {
+        img.style.display = "none";
+        const fallback = document.createElement("div");
+        fallback.className = "wrestler-silhouette";
+        fallback.innerHTML = generateWrestlerSVG("flex", c2);
+        portrait.insertBefore(fallback, portrait.firstChild);
+      };
+      portrait.appendChild(img);
+    } else {
+      const silhouette = document.createElement("div");
+      silhouette.className = "wrestler-silhouette";
+      silhouette.innerHTML = generateWrestlerSVG("flex", c2);
+      portrait.appendChild(silhouette);
+    }
+
+    const alias = document.createElement("div");
+    alias.className = "wrestler-alias";
+    alias.textContent = topCard.alias || topCard.name.slice(0, 4).toUpperCase();
+
+    portrait.appendChild(alias);
+    ui.yourTopCard.appendChild(portrait);
+
     const name = document.createElement("h2");
     name.className = "wrestler-name";
     name.textContent = topCard.name;
     ui.yourTopCard.appendChild(name);
 
-    const statsDiv = document.createElement("div");
-    statsDiv.className = "card-stats";
+    // Signature move
+    const moveEl = document.createElement("div");
+    moveEl.className = "wrestler-move";
+    moveEl.textContent = topCard.move || "";
+    ui.yourTopCard.appendChild(moveEl);
 
-    for (const stat of STATS) {
-      const row = document.createElement("div");
-      row.className = "card-stat-row";
-
-      const label = document.createElement("span");
-      label.className = "card-stat-label";
-      label.textContent = STAT_LABELS[stat];
-
-      const bar = document.createElement("div");
-      bar.className = "card-stat-bar";
-      const fill = document.createElement("div");
-      fill.className = `card-stat-fill ${stat}`;
-      fill.style.width = `${topCard[stat]}%`;
-      bar.appendChild(fill);
-
-      const val = document.createElement("span");
-      val.className = "card-stat-val";
-      val.textContent = String(topCard[stat]);
-
-      row.appendChild(label);
-      row.appendChild(bar);
-      row.appendChild(val);
-      statsDiv.appendChild(row);
-    }
-    ui.yourTopCard.appendChild(statsDiv);
+    // Stats shown in the "Pick a Stat" buttons on the right — not duplicated here
   } else {
     ui.yourTopCard.classList.remove("active-turn");
     const msg = document.createElement("div");
@@ -369,26 +448,28 @@ function render() {
     ui.sidebarLogs.appendChild(div);
   });
 
-  // Bot automation
-  if (mode === "local" && state.phase === "picking") {
+  // Bot automation — handle both revealing (draw) and picking phases
+  if (mode === "local" && (state.phase === "revealing" || state.phase === "picking")) {
     const cp = state.players[state.currentPlayerIndex];
     if (cp && cp.isBot) {
       if (revealTimeout) clearTimeout(revealTimeout);
+      const delay = state.phase === "revealing" ? 2000 : 1800;
       revealTimeout = setTimeout(() => {
-        if (!localState || localState.phase !== "picking") return;
+        if (!localState) return;
         const botAction = getBotMove(localState, localState.currentPlayerIndex);
         if (botAction) dispatchAction(botAction);
-      }, 1800);
+      }, delay);
     } else if (cp && cp.id === viewingPlayerId && autoPlay) {
       if (revealTimeout) clearTimeout(revealTimeout);
+      const delay = state.phase === "revealing" ? 1500 : 1200;
       revealTimeout = setTimeout(() => {
-        if (!localState || localState.phase !== "picking") return;
+        if (!localState) return;
         const idx = localState.players.findIndex((p) => p.id === viewingPlayerId);
         if (idx >= 0) {
           const botAction = getBotMove(localState, idx);
           if (botAction) dispatchAction(botAction);
         }
-      }, 1200);
+      }, delay);
     }
   }
 }
@@ -604,6 +685,15 @@ ui.startOnline.addEventListener("click", () => {
 });
 
 ui.leaveRoom.addEventListener("click", leaveRoom);
+
+// Next Round button (draw card to start next round)
+ui.nextRoundBtn.addEventListener("click", () => {
+  const state = currentState();
+  if (!state || state.phase !== "revealing") return;
+  const viewingId = currentViewingPlayerId(state);
+  if (!viewingId) return;
+  dispatchAction({ type: "draw_card", playerId: viewingId });
+});
 
 // Stat buttons
 const statBtns = ui.statButtons.querySelectorAll(".stat-btn");

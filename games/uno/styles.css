@@ -1261,10 +1261,12 @@ button:disabled { opacity: 0.3; cursor: not-allowed; }
   box-shadow:
     0 0 0 0.5px rgba(255,255,255,0.06) inset,
     0 12px 40px rgba(0,0,0,0.45);
-  transition: transform 0.4s var(--ease-spring);
+  transition: transform 0.4s var(--ease-spring), opacity 0.4s ease;
   pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
 }
-.toast.visible { transform: translateX(-50%) translateY(0); }
+.toast.visible { transform: translateX(-50%) translateY(0); opacity: 1; visibility: visible; }
 
 /* ================================================
    WINNER OVERLAY

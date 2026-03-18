@@ -1,52 +1,54 @@
-.PHONY: help install server serve dev open status e2e-open e2e-close clean clean-deps clean-artifacts
+.PHONY: install start dev stop restart status logs clean
 
-help:
-	@echo "Game Arena commands"
-	@echo "  make install   Install server dependencies"
-	@echo "  make server    Run WebSocket server on :8080"
-	@echo "  make serve     Run static web server on :8000"
-	@echo "  make dev       Print multi-terminal instructions"
-	@echo "  make open      Open Chrome at http://localhost:8000 (macOS)"
-	@echo "  make status    Show listeners on :8000 and :8080"
-	@echo "  make e2e-open  Open Chrome via Playwright (headed)"
-	@echo "  make e2e-close Close Playwright browsers"
-	@echo "  make clean     Remove Playwright artifacts"
-	@echo "  make clean-deps Remove node_modules and lockfile"
+PORT ?= 8881
+PID_FILE := .server.pid
 
+# Install dependencies
 install:
 	npm install
 
-server:
-	node server.js
+# Start the server (foreground)
+start: install
+	@echo "Starting Game Arena on http://localhost:$(PORT)"
+	PORT=$(PORT) node server.js
 
-serve:
-	python3 -m http.server 8000
+# Start in background
+dev: install
+	@if [ -f $(PID_FILE) ] && kill -0 $$(cat $(PID_FILE)) 2>/dev/null; then \
+		echo "Server already running (PID $$(cat $(PID_FILE)))"; \
+	else \
+		PORT=$(PORT) nohup node server.js > .server.log 2>&1 & echo $$! > $(PID_FILE); \
+		echo "Server started in background (PID $$(cat $(PID_FILE)))"; \
+		echo "  UI:  http://localhost:$(PORT)"; \
+		echo "  WS:  ws://localhost:$(PORT)"; \
+		echo "  Logs: make logs"; \
+	fi
 
-dev:
-	@echo "Run these in two terminals:"
-	@echo "  make server"
-	@echo "  make serve"
-	@echo "Then open http://localhost:8000 in your browser."
+# Stop background server
+stop:
+	@if [ -f $(PID_FILE) ]; then \
+		kill $$(cat $(PID_FILE)) 2>/dev/null && echo "Server stopped" || echo "Server not running"; \
+		rm -f $(PID_FILE); \
+	else \
+		echo "No PID file found"; \
+	fi
 
-open:
-	open -a "Google Chrome" http://localhost:8000
+# Restart background server
+restart: stop dev
 
+# Show server status
 status:
-	@echo "Static server (:8000):"
-	@lsof -nP -iTCP:8000 -sTCP:LISTEN || true
-	@echo "WebSocket server (:8080):"
-	@lsof -nP -iTCP:8080 -sTCP:LISTEN || true
+	@if [ -f $(PID_FILE) ] && kill -0 $$(cat $(PID_FILE)) 2>/dev/null; then \
+		echo "Running (PID $$(cat $(PID_FILE))) on http://localhost:$(PORT)"; \
+	else \
+		echo "Not running"; \
+		rm -f $(PID_FILE) 2>/dev/null; \
+	fi
 
-e2e-open:
-	playwright-cli open 'http://localhost:8000/?cachebust=1' --headed --browser chrome
+# Tail server logs
+logs:
+	@tail -f .server.log 2>/dev/null || echo "No logs found. Start with: make dev"
 
-e2e-close:
-	playwright-cli close-all
-
-clean: clean-artifacts
-
-clean-deps:
-	rm -rf node_modules package-lock.json
-
-clean-artifacts:
-	rm -rf .playwright-cli output/playwright
+# Clean generated files
+clean: stop
+	rm -rf node_modules .server.log $(PID_FILE)

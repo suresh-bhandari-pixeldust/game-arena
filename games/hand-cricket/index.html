@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Hand Cricket" />
+    <meta name="theme-color" content="#0a100a" />
+    <title>Hand Cricket (Odd-Even) - Game Arena</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230a100a'/%3E%3Ctext x='50' y='68' font-family='system-ui' font-size='50' text-anchor='middle' fill='%23f5deb3'%3E%E2%9C%8B%3C/text%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="cricket-app">
+      <header class="brand">
+        <div>
+          <a href="../../index.html" class="back-link">Game Arena</a>
+          <p class="eyebrow">Classic Indian School Game</p>
+          <h1>Hand Cricket</h1>
+          <p class="subtext">Show fingers 1-6 simultaneously. Same number = OUT! Different = batter scores. Outscore your opponent to win!</p>
+        </div>
+        <div class="status-pill" id="connectionStatus">Local</div>
+      </header>
+
+      <!-- Sidebar Toggle -->
+      <button class="toggle-logs-btn" id="toggleLogs">Match Log</button>
+
+      <!-- Logs Sidebar -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <h2>Match Log</h2>
+          <button id="closeSidebar" type="button">Close</button>
+        </div>
+        <div class="sidebar-content" id="sidebarLogs"></div>
+      </aside>
+
+      <!-- Setup Panel -->
+      <section class="panel setup" id="setupPanel">
+        <div class="mode-toggle" role="tablist" aria-label="Game modes">
+          <button class="mode-btn active" data-mode="local" type="button" role="tab" aria-selected="true">
+            Single Player
+          </button>
+          <button class="mode-btn" data-mode="online" type="button" role="tab" aria-selected="false">
+            Online Room
+          </button>
+        </div>
+
+        <div class="mode-body" id="localSetup" role="tabpanel">
+          <div class="setup-grid">
+            <div class="card-panel">
+              <h2>Setup</h2>
+              <label class="field">
+                <span>Your name</span>
+                <input id="localName" type="text" placeholder="Enter your name" value="Player" />
+              </label>
+            </div>
+
+            <div class="card-panel">
+              <h2>Options</h2>
+              <label class="switch">
+                <input id="localSpectator" type="checkbox" />
+                <span class="spectator-label">Spectator Mode (Bots only)</span>
+              </label>
+              <button id="startLocal" class="primary" type="button">
+                Start Match
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mode-body hidden" id="onlineSetup" role="tabpanel">
+          <div class="setup-grid">
+            <div class="card-panel">
+              <h2>Connect</h2>
+              <label class="field">
+                <span>Your name</span>
+                <input id="onlineName" type="text" placeholder="Player name" />
+              </label>
+              <label class="field">
+                <span>Server URL</span>
+                <input id="serverUrl" type="text" placeholder="Auto-detected" />
+              </label>
+              <label class="field">
+                <span>Room code</span>
+                <input id="roomCode" type="text" placeholder="e.g. F9K2Q" />
+              </label>
+              <div class="button-row">
+                <button id="createRoom" class="primary" type="button">Create Room</button>
+                <button id="joinRoom" type="button">Join Room</button>
+              </div>
+              <p class="hint">Run the server to enable online play, then share the room code.</p>
+            </div>
+
+            <div class="card-panel hidden" id="onlineLobby">
+              <div class="lobby-header">
+                <div>
+                  <p class="eyebrow">Room</p>
+                  <h3 id="roomDisplay">----</h3>
+                </div>
+                <div class="lobby-actions">
+                  <button id="copyRoom" type="button">Copy Code</button>
+                  <button id="shareLan" type="button" class="accent">Share LAN Link</button>
+                </div>
+              </div>
+              <div class="lobby-players" id="lobbyPlayers"></div>
+              <div class="lobby-actions">
+                <button id="addBot" type="button">Add Bot</button>
+                <button id="startOnline" class="primary" type="button">Start Match</button>
+                <button id="leaveRoom" type="button">Leave Room</button>
+              </div>
+              <p class="hint" id="hostHint">Only the host can start the game.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Game Panel -->
+      <section class="panel game hidden" id="gamePanel">
+        <!-- Turn info + actions -->
+        <div class="table-top">
+          <div class="turn-info">
+            <div class="turn-card" id="turnCard">
+              <h2 id="turnName">-</h2>
+              <p id="turnHint" class="muted">Waiting for match</p>
+            </div>
+          </div>
+          <div class="table-actions">
+            <button id="autoPlayToggle" type="button">Auto Play: Off</button>
+            <button id="restartLocal" type="button">New Match</button>
+          </div>
+        </div>
+
+        <!-- Scoreboard -->
+        <div class="scoreboard" id="scoreboard">
+          <div class="score-player">
+            <div class="score-player-name" id="scoreP1Name">Player 1</div>
+            <div class="score-runs" id="scoreP1Runs">0</div>
+          </div>
+          <div class="score-vs">
+            <span>VS</span>
+            <span class="innings-info" id="inningsInfo">Toss</span>
+            <span class="target-info hidden" id="targetInfo">Target: --</span>
+          </div>
+          <div class="score-player">
+            <div class="score-player-name" id="scoreP2Name">Player 2</div>
+            <div class="score-runs" id="scoreP2Runs">0</div>
+          </div>
+        </div>
+
+        <!-- Hidden stepper (hand cricket is always 2 players) -->
+        <div class="hidden">
+          <button id="playerMinus" type="button">-</button>
+          <span id="playerCount">1</span>
+          <button id="playerPlus" type="button">+</button>
+        </div>
+
+        <!-- Toss: Odd/Even call -->
+        <div class="toss-area hidden" id="tossArea">
+          <p class="toss-prompt" id="tossPrompt">Call Odd or Even:</p>
+          <div class="toss-buttons">
+            <button id="tossOddBtn" class="toss-btn odd-btn" type="button" disabled>Odd</button>
+            <button id="tossEvenBtn" class="toss-btn even-btn" type="button" disabled>Even</button>
+          </div>
+        </div>
+
+        <!-- Toss winner: Bat or Bowl -->
+        <div class="bat-or-bowl-area hidden" id="batOrBowlArea">
+          <p class="bat-bowl-prompt" id="batOrBowlPrompt">Choose to bat or bowl:</p>
+          <div class="bat-bowl-buttons">
+            <button id="chooseBat" class="role-btn bat-btn" type="button" disabled>Bat</button>
+            <button id="chooseBowl" class="role-btn bowl-btn" type="button" disabled>Bowl</button>
+          </div>
+        </div>
+
+        <!-- Number Picker (1-6) -->
+        <div class="number-picker hidden" id="numberPicker">
+          <p class="number-picker-title" id="numberPickerTitle">Pick a number:</p>
+          <div class="number-grid" id="numberButtons">
+            <button class="num-btn" data-num="1" type="button" disabled>1</button>
+            <button class="num-btn" data-num="2" type="button" disabled>2</button>
+            <button class="num-btn" data-num="3" type="button" disabled>3</button>
+            <button class="num-btn" data-num="4" type="button" disabled>4</button>
+            <button class="num-btn" data-num="5" type="button" disabled>5</button>
+            <button class="num-btn" data-num="6" type="button" disabled>6</button>
+          </div>
+        </div>
+
+        <!-- Reveal Area (ball result) -->
+        <div class="reveal-area hidden" id="revealArea">
+          <div class="reveal-matchup">
+            <div class="reveal-player">
+              <span class="reveal-player-label">Batter</span>
+              <span class="reveal-player-name" id="revealBatterName">-</span>
+              <div class="reveal-number" id="revealBatterNum">?</div>
+            </div>
+            <span class="reveal-vs">VS</span>
+            <div class="reveal-player">
+              <span class="reveal-player-label">Bowler</span>
+              <span class="reveal-player-name" id="revealBowlerName">-</span>
+              <div class="reveal-number" id="revealBowlerNum">?</div>
+            </div>
+          </div>
+          <div class="reveal-result" id="revealResult">-</div>
+          <div class="reveal-runs-scored" id="revealRunsScored"></div>
+          <button id="continueBtn" class="continue-btn primary" type="button">Continue</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Winner overlay -->
+    <div class="winner-banner hidden" id="winnerBanner">
+      <div class="winner-content">
+        <div class="trophy">&#127942;</div>
+        <h2 id="winnerName">Champion!</h2>
+        <p>The match is over</p>
+        <button id="winnerNewGame" class="primary" type="button">Rematch</button>
+      </div>
+    </div>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

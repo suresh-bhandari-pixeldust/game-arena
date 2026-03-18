@@ -18,7 +18,42 @@ function nextCardId() {
   return `w${cardCounter}`;
 }
 
+// Visual identity for each wrestler — colors, signature move, short alias
+const WRESTLER_VISUALS = {
+  "John Cena":                { colors: ["#0050b5", "#ff8c00"], alias: "CENA", move: "FU / AA", img: "john-cena.jpg" },
+  "The Rock":                 { colors: ["#1a1a1a", "#d4af37"], alias: "ROCK", move: "Rock Bottom", img: "the-rock.jpg" },
+  "Undertaker":               { colors: ["#2d1b4e", "#6b3fa0"], alias: "TAKER", move: "Tombstone", img: "undertaker.jpg" },
+  "Triple H":                 { colors: ["#1c1c1c", "#c5a030"], alias: "HHH", move: "Pedigree", img: "triple-h.jpg" },
+  "Rey Mysterio":             { colors: ["#005f2e", "#ffd700"], alias: "REY", move: "619", img: "rey-mysterio.jpg" },
+  "Batista":                  { colors: ["#3a0a0a", "#c41e3a"], alias: "BATISTA", move: "Batista Bomb", img: "batista.jpg" },
+  "Edge":                     { colors: ["#2a0030", "#ff3366"], alias: "EDGE", move: "Spear", img: "edge.jpg" },
+  "Kane":                     { colors: ["#8b0000", "#ff2a00"], alias: "KANE", move: "Chokeslam", img: "kane.jpg" },
+  "Big Show":                 { colors: ["#1a1a2e", "#4a90d9"], alias: "SHOW", move: "WMD Punch", img: "big-show.jpg" },
+  "Brock Lesnar":             { colors: ["#1a0000", "#cc0000"], alias: "BROCK", move: "F-5", img: "brock-lesnar.jpg" },
+  "Stone Cold Steve Austin":  { colors: ["#0a0a0a", "#4ecdc4"], alias: "SCSA", move: "Stone Cold Stunner", img: "stone-cold.jpg" },
+  "Shawn Michaels":           { colors: ["#1a1a3e", "#ff69b4"], alias: "HBK", move: "Sweet Chin Music", img: "shawn-michaels.jpg" },
+  "Randy Orton":              { colors: ["#0d1b2a", "#778da9"], alias: "ORTON", move: "RKO", img: "randy-orton.jpg" },
+  "Jeff Hardy":               { colors: ["#1a0a2e", "#9b59b6"], alias: "HARDY", move: "Swanton Bomb", img: "jeff-hardy.jpg" },
+  "Chris Jericho":            { colors: ["#0d2b45", "#e8c547"], alias: "Y2J", move: "Walls of Jericho", img: "chris-jericho.jpg" },
+  "Kurt Angle":               { colors: ["#002868", "#bf0a30"], alias: "ANGLE", move: "Angle Slam", img: "kurt-angle.jpg" },
+  "Booker T":                 { colors: ["#2d1a00", "#e67e22"], alias: "BOOKER", move: "Book End", img: "booker-t.jpg" },
+  "Rob Van Dam":              { colors: ["#004d00", "#00ff41"], alias: "RVD", move: "Five Star Frog Splash", img: "rob-van-dam.jpg" },
+  "Goldberg":                 { colors: ["#1a1a1a", "#e0e0e0"], alias: "GOLDBERG", move: "Jackhammer", img: "goldberg.jpg" },
+  "The Great Khali":          { colors: ["#3d0c02", "#d35400"], alias: "KHALI", move: "Brain Chop", img: "great-khali.jpg" },
+  "CM Punk":                  { colors: ["#1a1a1a", "#e74c3c"], alias: "PUNK", move: "GTS", img: "cm-punk.jpg" },
+  "Ric Flair":                { colors: ["#2c003e", "#d4af37"], alias: "FLAIR", move: "Figure Four", img: "ric-flair.jpg" },
+  "Mankind":                  { colors: ["#2d2d0d", "#8b7355"], alias: "MANKIND", move: "Mandible Claw", img: "mankind.jpg" },
+  "Mark Henry":               { colors: ["#1a0a00", "#8b4513"], alias: "HENRY", move: "World's Strongest Slam", img: "mark-henry.jpg" },
+  "Eddie Guerrero":           { colors: ["#006400", "#ff4500"], alias: "EDDIE", move: "Frog Splash", img: "eddie-guerrero.jpg" },
+  "Yokozuna":                 { colors: ["#1a0a1a", "#c0392b"], alias: "YOKO", move: "Banzai Drop", img: "yokozuna.jpg" },
+  "Andre the Giant":          { colors: ["#1a1a0a", "#bdb76b"], alias: "ANDRE", move: "Body Slam", img: "andre-the-giant.jpg" },
+  "Hulk Hogan":               { colors: ["#8b0000", "#ffd700"], alias: "HOGAN", move: "Atomic Leg Drop", img: "hulk-hogan.jpg" },
+  "Macho Man Randy Savage":   { colors: ["#4a0080", "#ff6b00"], alias: "MACHO", move: "Flying Elbow", img: "macho-man.jpg" },
+  "Ultimate Warrior":         { colors: ["#ff1493", "#00bfff"], alias: "WARRIOR", move: "Gorilla Press", img: "ultimate-warrior.png" },
+};
+
 function makeWrestler(name, strength, speed, stamina, charisma, finisher) {
+  const visual = WRESTLER_VISUALS[name] || { colors: ["#333", "#666"], alias: name.slice(0, 4).toUpperCase(), move: "Finisher", img: null };
   return {
     id: nextCardId(),
     name,
@@ -27,6 +62,10 @@ function makeWrestler(name, strength, speed, stamina, charisma, finisher) {
     stamina,
     charisma,
     finisher,
+    colors: visual.colors,
+    alias: visual.alias,
+    move: visual.move,
+    img: visual.img || null,
   };
 }
 
@@ -64,6 +103,8 @@ export function createDeck() {
     makeWrestler("Ultimate Warrior", 92, 68, 72, 90, 85),
   ];
 }
+
+export { WRESTLER_VISUALS };
 
 export function shuffle(deck, rng = Math.random) {
   const array = [...deck];
@@ -241,10 +282,10 @@ export function applyAction(state, action) {
         `${winnerPlayer.name} wins the round with ${winnerRC.card.name} (${highestValue})! Takes ${wonCards.length} card${wonCards.length !== 1 ? "s" : ""}.`
       );
 
-      // Check game end
+      // Check game end — winner picks next stat
       if (!checkWinner(state)) {
         state.currentPlayerIndex = winnerRC.playerIndex;
-        state.phase = "picking";
+        // Stay in "revealing" so players see the result before next round
       }
     } else {
       // Tie -- cards go to war pile
@@ -259,18 +300,33 @@ export function applyAction(state, action) {
         `TIE between ${tiedNames} at ${highestValue}! ${allCards.length} card${allCards.length !== 1 ? "s" : ""} added to the war pile (${state.warPile.length} total).`
       );
 
-      // Check if game can continue
+      // Check if game can continue — stay in "revealing" for ties too
       if (!checkWinner(state)) {
         const nextIdx = nextAlivePlayer(state, state.currentPlayerIndex);
         if (nextIdx >= 0) {
           state.currentPlayerIndex = nextIdx;
-          state.phase = "picking";
         } else {
           checkWinner(state);
         }
       }
     }
 
+    return { state };
+  }
+
+  if (type === "draw_card") {
+    if (state.phase !== "revealing") {
+      return { state, error: "Not in draw phase." };
+    }
+    const currentPlayer = state.players[state.currentPlayerIndex];
+    if (currentPlayer.id !== playerId) {
+      return { state, error: "Not your turn to draw." };
+    }
+    state.revealedCards = [];
+    state.currentStat = null;
+    state.roundWinnerIndex = null;
+    state.phase = "picking";
+    pushLog(state, `${currentPlayer.name} draws a card — pick a stat!`);
     return { state };
   }
 
@@ -298,6 +354,10 @@ export function sanitizeStateForPlayer(state, playerId) {
 export function getBotMove(state, playerIndex) {
   const player = state.players[playerIndex];
   if (!player || player.deck.length === 0) return null;
+
+  if (state.phase === "revealing" && state.currentPlayerIndex === playerIndex) {
+    return { type: "draw_card", playerId: player.id };
+  }
 
   if (state.phase === "picking" && state.currentPlayerIndex === playerIndex) {
     const topCard = player.deck[0];

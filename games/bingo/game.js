@@ -92,16 +92,19 @@ function checkBingo(marked) {
 
 export function createGame({ players, options = {} }) {
   const numberPool = generateNumberPool();
+  const dedicatedCaller = Boolean(options.dedicatedCaller);
+  const autoMark = options.autoMark !== false;
 
-  const gamePlayers = players.map((player) => {
-    const card = generateCard();
-    // marked[col][row] — center is always marked (FREE)
-    const marked = Array.from({ length: 5 }, () => Array(5).fill(false));
-    marked[2][2] = true; // FREE space
+  const gamePlayers = players.map((player, idx) => {
+    const isCallerOnly = dedicatedCaller && idx === 0;
+    const card = isCallerOnly ? null : generateCard();
+    const marked = isCallerOnly ? null : Array.from({ length: 5 }, () => Array(5).fill(false));
+    if (marked) marked[2][2] = true; // FREE space
     return {
       id: player.id,
       name: player.name,
       isBot: Boolean(player.isBot),
+      callerOnly: isCallerOnly,
       card,
       marked,
     };
@@ -117,11 +120,16 @@ export function createGame({ players, options = {} }) {
     phase: "playing",
     winnerId: null,
     winPattern: null,
-    options: { ...options },
+    options: { autoMark, dedicatedCaller, ...options },
     log: [],
   };
 
-  pushLog(state, `Bingo! ${gamePlayers[0].name} is the caller. Let's play!`);
+  const callerName = gamePlayers[0].name;
+  if (dedicatedCaller) {
+    pushLog(state, `${callerName} is the dedicated caller. Let's play!`);
+  } else {
+    pushLog(state, `Bingo! ${callerName} is the caller. Let's play!`);
+  }
 
   return state;
 }
@@ -160,12 +168,16 @@ export function applyAction(state, action) {
     const letter = getColumnLetter(number);
     pushLog(state, `${caller.name} calls ${letter}-${number}!`);
 
-    // Auto-mark all player cards
+    // Mark cards based on autoMark setting
     const colIndex = COLUMNS.indexOf(letter);
     state.players.forEach((player) => {
-      for (let row = 0; row < 5; row++) {
-        if (player.card[colIndex][row] === number) {
-          player.marked[colIndex][row] = true;
+      if (!player.card || player.callerOnly) return;
+      // Auto-mark if autoMark is on, or always for bots
+      if (state.options.autoMark || player.isBot) {
+        for (let row = 0; row < 5; row++) {
+          if (player.card[colIndex][row] === number) {
+            player.marked[colIndex][row] = true;
+          }
         }
       }
     });
@@ -173,8 +185,34 @@ export function applyAction(state, action) {
     return { state };
   }
 
+  if (type === "mark_cell") {
+    const player = state.players[playerIndex];
+    if (!player.card || player.callerOnly) {
+      return { state, error: "You don't have a card." };
+    }
+    const { col, row } = action;
+    if (col < 0 || col >= 5 || row < 0 || row >= 5) {
+      return { state, error: "Invalid cell." };
+    }
+    if (col === 2 && row === 2) {
+      return { state }; // FREE space already marked
+    }
+    const number = player.card[col][row];
+    if (!state.calledNumbers.includes(number)) {
+      return { state, error: "This number hasn't been called yet." };
+    }
+    if (player.marked[col][row]) {
+      return { state }; // Already marked
+    }
+    player.marked[col][row] = true;
+    return { state };
+  }
+
   if (type === "claim_bingo") {
     const player = state.players[playerIndex];
+    if (player.callerOnly) {
+      return { state, error: "The caller can't claim bingo." };
+    }
     const result = checkBingo(player.marked);
     if (result) {
       state.winnerId = playerId;
@@ -200,9 +238,10 @@ export function sanitizeStateForPlayer(state, playerId) {
       id: player.id,
       name: player.name,
       isBot: player.isBot,
-      card: player.id === playerId ? player.card : player.card, // cards are public in bingo
-      marked: player.id === playerId ? player.marked : undefined, // hide other players' marks
-      markedCount: player.marked.flat().filter(Boolean).length,
+      callerOnly: player.callerOnly,
+      card: player.callerOnly ? null : player.card,
+      marked: player.id === playerId && !player.callerOnly ? player.marked : undefined,
+      markedCount: player.marked ? player.marked.flat().filter(Boolean).length : 0,
     })),
   };
 }

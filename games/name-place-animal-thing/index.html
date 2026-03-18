@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="NPAT" />
+    <meta name="theme-color" content="#0a0a0a" />
+    <title>Name Place Animal Thing - Game Arena</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230a0a0a'/%3E%3Ctext x='50' y='68' font-family='system-ui' font-size='48' font-weight='900' text-anchor='middle' fill='%2300d4ff'%3EA%3C/text%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="npat-app">
+      <header class="brand">
+        <div>
+          <a href="../../index.html" class="back-link">Game Arena</a>
+          <p class="eyebrow">Classic Word Game</p>
+          <h1>Name Place Animal Thing</h1>
+          <p class="subtext">A letter appears, fill in a Name, Place, Animal, and Thing before time runs out!</p>
+        </div>
+        <div class="status-pill" id="connectionStatus">Local</div>
+      </header>
+
+      <!-- Sidebar Toggle -->
+      <button class="toggle-logs-btn" id="toggleLogs">Game Logs</button>
+
+      <!-- Logs Sidebar -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <h2>Game Log</h2>
+          <button id="closeSidebar" type="button">Close</button>
+        </div>
+        <div class="sidebar-content" id="sidebarLogs"></div>
+      </aside>
+
+      <!-- Setup Panel -->
+      <section class="panel setup" id="setupPanel">
+        <div class="mode-toggle" role="tablist" aria-label="Game modes">
+          <button class="mode-btn active" data-mode="local" type="button" role="tab" aria-selected="true">
+            Single Player
+          </button>
+          <button class="mode-btn" data-mode="online" type="button" role="tab" aria-selected="false">
+            Online Room
+          </button>
+        </div>
+
+        <div class="mode-body" id="localSetup" role="tabpanel">
+          <div class="setup-grid">
+            <div class="card-panel">
+              <h2>Setup</h2>
+              <label class="field">
+                <span>Your name</span>
+                <input id="localName" type="text" placeholder="Enter your name" value="Player" />
+              </label>
+              <label class="field">
+                <span>Number of Opponents</span>
+                <div class="stepper">
+                  <button id="playerMinus" type="button">-</button>
+                  <span id="playerCount">2</span>
+                  <button id="playerPlus" type="button">+</button>
+                </div>
+              </label>
+            </div>
+
+            <div class="card-panel">
+              <h2>Options</h2>
+              <label class="field">
+                <span>Rounds</span>
+                <div class="stepper">
+                  <button id="roundsMinus" type="button">-</button>
+                  <span id="roundsCount">5</span>
+                  <button id="roundsPlus" type="button">+</button>
+                </div>
+              </label>
+              <label class="field">
+                <span>Time per round (seconds)</span>
+                <div class="stepper">
+                  <button id="timeMinus" type="button">-</button>
+                  <span id="timeCount">30</span>
+                  <button id="timePlus" type="button">+</button>
+                </div>
+              </label>
+              <label class="switch">
+                <input id="localSpectator" type="checkbox" />
+                <span class="spectator-label">Spectator Mode (Bots only)</span>
+              </label>
+              <button id="startLocal" class="primary" type="button">
+                Start Game
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mode-body hidden" id="onlineSetup" role="tabpanel">
+          <div class="setup-grid">
+            <div class="card-panel">
+              <h2>Connect</h2>
+              <label class="field">
+                <span>Your name</span>
+                <input id="onlineName" type="text" placeholder="Player name" />
+              </label>
+              <label class="field">
+                <span>Server URL</span>
+                <input id="serverUrl" type="text" placeholder="Auto-detected" />
+              </label>
+              <label class="field">
+                <span>Room code</span>
+                <input id="roomCode" type="text" placeholder="e.g. F9K2Q" />
+              </label>
+              <div class="button-row">
+                <button id="createRoom" class="primary" type="button">Create Room</button>
+                <button id="joinRoom" type="button">Join Room</button>
+              </div>
+              <p class="hint">Run the server to enable online play, then share the room code.</p>
+            </div>
+
+            <div class="card-panel hidden" id="onlineLobby">
+              <div class="lobby-header">
+                <div>
+                  <p class="eyebrow">Room</p>
+                  <h3 id="roomDisplay">----</h3>
+                </div>
+                <div class="lobby-actions">
+                  <button id="copyRoom" type="button">Copy Code</button>
+                  <button id="shareLan" type="button" class="accent">Share LAN Link</button>
+                </div>
+              </div>
+              <div class="lobby-players" id="lobbyPlayers"></div>
+              <div class="lobby-actions">
+                <button id="addBot" type="button">Add Bot</button>
+                <button id="startOnline" class="primary" type="button">Start Game</button>
+                <button id="leaveRoom" type="button">Leave Room</button>
+              </div>
+              <p class="hint" id="hostHint">Only the host can start the game.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Game Panel -->
+      <section class="panel game hidden" id="gamePanel">
+        <!-- Round info + actions -->
+        <div class="table-top">
+          <div class="turn-info">
+            <div class="turn-card" id="turnCard">
+              <h2 id="turnName">-</h2>
+              <p id="turnHint" class="muted">Waiting for game</p>
+            </div>
+          </div>
+          <div class="table-actions">
+            <button id="restartLocal" type="button">New Game</button>
+          </div>
+        </div>
+
+        <!-- Letter Display -->
+        <div class="letter-display" id="letterDisplay">
+          <div class="letter-label">The letter is</div>
+          <div class="letter-big" id="letterBig">A</div>
+          <div class="timer-bar" id="timerBar">
+            <div class="timer-fill" id="timerFill"></div>
+          </div>
+          <div class="timer-text" id="timerText">30s</div>
+        </div>
+
+        <!-- Scoreboard -->
+        <div class="scoreboard" id="scoreboard">
+          <div class="scoreboard-row header">
+            <div class="sb-name">Player</div>
+            <div class="sb-score">Score</div>
+          </div>
+          <div id="scoreboardBody"></div>
+        </div>
+
+        <!-- Answer Form (playing phase) -->
+        <div class="answer-form hidden" id="answerForm">
+          <h3>Fill in words starting with "<span id="formLetter">A</span>"</h3>
+          <div class="answer-fields">
+            <label class="answer-field">
+              <span class="field-icon" style="--cat-color: #ff6b6b">N</span>
+              <div class="field-content">
+                <span class="field-label">Name</span>
+                <input id="answerName" type="text" placeholder="A person's name..." autocomplete="off" />
+              </div>
+            </label>
+            <label class="answer-field">
+              <span class="field-icon" style="--cat-color: #4ecdc4">P</span>
+              <div class="field-content">
+                <span class="field-label">Place</span>
+                <input id="answerPlace" type="text" placeholder="A city or country..." autocomplete="off" />
+              </div>
+            </label>
+            <label class="answer-field">
+              <span class="field-icon" style="--cat-color: #ffd93d">A</span>
+              <div class="field-content">
+                <span class="field-label">Animal</span>
+                <input id="answerAnimal" type="text" placeholder="An animal..." autocomplete="off" />
+              </div>
+            </label>
+            <label class="answer-field">
+              <span class="field-icon" style="--cat-color: #c084fc">T</span>
+              <div class="field-content">
+                <span class="field-label">Thing</span>
+                <input id="answerThing" type="text" placeholder="An object..." autocomplete="off" />
+              </div>
+            </label>
+          </div>
+          <button id="submitAnswers" class="primary submit-btn" type="button">
+            Submit Answers
+          </button>
+          <p class="submitted-msg hidden" id="submittedMsg">Answers submitted! Waiting for others...</p>
+        </div>
+
+        <!-- Round Results (scoring phase) -->
+        <div class="round-results hidden" id="roundResults">
+          <h3 class="results-title" id="resultsTitle">Round Results</h3>
+          <div class="results-table" id="resultsTable"></div>
+          <button id="nextRoundBtn" class="primary next-round-btn" type="button">Next Round</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Winner overlay -->
+    <div class="winner-banner hidden" id="winnerBanner">
+      <div class="winner-content">
+        <div class="trophy">&#127942;</div>
+        <h2 id="winnerName">Champion!</h2>
+        <p id="winnerScore">Final Score</p>
+        <button id="winnerNewGame" class="primary" type="button">Play Again</button>
+      </div>
+    </div>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
