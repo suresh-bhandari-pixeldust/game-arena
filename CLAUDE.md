@@ -59,3 +59,16 @@ Game state always includes: `players`, `currentPlayerIndex`, `phase`, `winnerId`
 ## WebSocket Protocol
 
 Messages are JSON: `{ type, playerId, ... }`. Key server message types: `hello`, `room_state`, `game_state`, `error`. Client sends game-specific action types (e.g., `play_card`, `draw_card`). Server broadcasts sanitized state to all players after each action.
+
+## Registering a New Game in server.js
+
+Three changes needed:
+1. Add `import * as fooEngine from "./games/foo/game.js";` at top
+2. Add `foo: fooEngine` to the `engines` object
+3. Add `foo: ["action1", "action2"]` to the `gameActions` object inside the message handler
+
+## Shared Skills (Gemini CLI)
+
+The `.gemini/skills/` directory contains agent skills usable by Gemini CLI:
+- **`game-dev`**: Development specialist — new game creation, features, bug fixes
+- **`game-qa`**: QA specialist — rule verification, bot stress testing, bug reproduction

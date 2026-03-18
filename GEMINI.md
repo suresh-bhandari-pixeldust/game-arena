@@ -1,18 +1,19 @@
 # Game Arena - Project Context
 
 ## Project Overview
-Game Arena is a web-based, multiplayer game platform featuring classic nostalgic games. It features a Node.js WebSocket server for real-time online play and vanilla JavaScript frontends that support both local and online room-based matchmaking. Games include UNO, Bingo, and WWE Trump Cards.
+Game Arena is a web-based multiplayer game platform featuring 15+ classic nostalgic Indian games. Built with vanilla JavaScript (ES Modules), a Node.js WebSocket server, and no frameworks or build tools.
 
 ### Core Technologies
-- **Backend:** Node.js, `ws` (WebSocket library).
-- **Frontend:** Vanilla HTML5/CSS3/JavaScript (ESM).
-- **Game Logic:** Custom functional game engine in `game.js`.
-- **Tooling:** `Makefile` for development automation.
+- **Backend:** Node.js, `ws` (WebSocket library)
+- **Frontend:** Vanilla HTML5/CSS3/JavaScript (ESM)
+- **Game Logic:** Pure functional game engines in `games/{name}/game.js`
+- **Tooling:** `Makefile` for development automation
 
 ### Architecture
-- **Server (`server.js`):** Manages WebSocket connections, room lifecycle, and state synchronization. It uses the game engine to process actions and broadcasts sanitized state updates to players.
-- **Game Engine (`game.js`):** A pure logic layer that implements UNO rules, deck management, and turn-based state transitions. It includes state sanitization to ensure players cannot see opponents' hands in online mode.
-- **Client (`app.js`):** Handles UI rendering, user interactions, and communication with the WebSocket server. It mirrors the game logic for local play.
+- **Server (`server.js`):** Single-file HTTP + WebSocket server. Manages rooms, turn timers (30s), bot timeouts (1.5s), and state synchronization. Imports all game engines and dispatches actions dynamically.
+- **Game Engine (`games/{name}/game.js`):** Pure logic layer. Exports `createGame`, `applyAction`, `getBotMove`, `sanitizeStateForPlayer`. Must run in both Node.js and browser.
+- **Client (`games/{name}/app.js`):** Handles UI rendering, DOM events, local/online mode toggle, and WebSocket communication.
+- **Hub (`index.html`):** Landing page with game cards linking to each game.
 
 ---
 
@@ -20,48 +21,57 @@ Game Arena is a web-based, multiplayer game platform featuring classic nostalgic
 
 ### Prerequisites
 - Node.js (v16+)
-- Python 3 (for serving the frontend) or any static web server.
 
 ### Commands
-- **Install Dependencies:** `npm install` or `make install`
-- **Start WebSocket Server:** `node server.js` or `make server` (Runs on port 8080 by default).
-- **Serve Frontend:** `python3 -m http.server 8000` or `make serve` (Opens on http://localhost:8000).
-- **Development Mode:** `make dev` (Displays instructions for running both server and client).
-- **Clean Environment:** `make clean` (Removes `node_modules` and lockfiles).
+- **Install:** `npm install` or `make install`
+- **Start (background):** `make dev` (port 8881)
+- **Start (foreground):** `make start` or `PORT=8888 node server.js`
+- **Stop:** `make stop`
+- **Status:** `make status`
+- **Logs:** `make logs`
+- **Clean:** `make clean`
 
 ---
 
 ## Specialized Agents (Skills)
-Two specialized agent identities have been established to handle project-specific tasks. You can activate them using `activate_skill("skill-name")`.
 
-### 1. QA Agent (`uno-qa`)
-- **Responsibility**: Testing, logic validation, and rule adherence.
-- **Key Resources**:
-    - `references/uno-rules.md`: Comprehensive guide to UNO rules and engine toggles.
-- **Workflow**: Activate when validating bug reports or verifying new game mechanics.
+Two specialized skills for structured task handling:
 
-### 2. Dev Agent (`uno-dev`)
-- **Responsibility**: Feature implementation, bug fixes, and architectural integrity.
-- **Key Constraint**: Maintains the functional purity of `game.js` while ensuring the WebSocket protocol remains synchronized across client and server.
-- **Workflow**: Activate when implementing user requests or fixing bugs identified by the QA agent.
+### 1. Dev Agent (`game-dev`)
+- **Responsibility:** Feature implementation, new game creation, bug fixes, architecture
+- **When to use:** When modifying game code, adding new games, or fixing issues
+- **Key constraint:** Maintain pure functional engines, WebSocket protocol sync, sanitization
+
+### 2. QA Agent (`game-qa`)
+- **Responsibility:** Rule verification, bug reproduction, state validation, bot testing
+- **When to use:** When validating game behavior, investigating bugs, or stress testing
+- **Key approach:** Script-based testing using game engines directly in Node.js
 
 ---
+
+## Adding a New Game
+
+1. Create `games/{game-name}/` with: `game.js`, `app.js`, `index.html`, `styles.css`
+2. Engine contract exports: `createGame`, `applyAction`, `getBotMove`, `sanitizeStateForPlayer`, `pushLog`
+3. Register in `server.js`: import, `engines` map entry, `gameActions` allowed actions
+4. Add game card to root `index.html`
 
 ## Development Conventions
 
 ### Code Style
-- **ES Modules:** The project uses standard ECMAScript Modules (`import`/`export`).
-- **Functional State:** Game logic in `game.js` follows a functional pattern where `applyAction` returns a new state object or an error.
-- **Naming:** Uses `camelCase` for variables and functions. Files are named lowercase with hyphens if necessary (e.g., `server.js`, `game.js`).
-- **Minimal Dependencies:** Avoid adding new dependencies unless absolutely necessary (currently only `ws`).
+- **ES Modules** everywhere (`import`/`export`)
+- **Functional game engines**: `applyAction` returns `{ state, error? }`
+- **Naming:** `camelCase` for code, lowercase-hyphen for directories
+- **Single dependency:** `ws` (WebSocket). No frameworks, TypeScript, or build tools.
+- **Dark theme UI:** Apple-inspired design, `#0a0a0a` background
 
-### Game Logic & Rules
-- **State Sanitization:** Always use `sanitizeStateForPlayer` before sending game state to a client in online mode.
-- **Custom Rules:** The engine supports several rule toggles:
-    - `unoPenalty`: Players must call UNO when they have one card left.
-    - `enforceWildDrawFour`: Wild Draw 4 can only be played if no other matching color cards are in hand.
-    - `mustDrawOnlyIfNoPlay`: Players can only draw if they have no playable cards.
+### Game State Contract
+Every game state includes: `players`, `currentPlayerIndex`, `phase` ("playing" | "finished"), `winnerId`, `log`, `options`
 
-### Testing
-- **Manual Testing:** Use `make dev` and open multiple browser tabs (or incognito windows) to simulate multiple players in a room.
-- **Playwright:** The `.playwright-cli` directory suggests usage of Playwright for automated E2E testing/scraping, though no formal test suite is defined in `package.json`.
+### Network Protocol
+- WebSocket JSON messages: `{ type: string, playerId?, ...data }`
+- Server broadcasts `room_state` and `game_state` to all players
+- `sanitizeStateForPlayer` hides secrets before broadcast
+
+### Current Games (15)
+uno, bingo, wwe-trump-cards, football-trump-cards, hand-cricket, book-cricket, flames, tic-tac-toe, dots-and-boxes, name-place-animal-thing, raja-mantri-chor-sipahi, atlas, ludo, pen-fight, business
