@@ -10,7 +10,7 @@ const CATEGORY_LABELS = {
   thing: "Thing",
 };
 
-const LETTERS = "ABCDEFGHIJKLMNOPRSTW".split("");
+const LETTERS = "ABCDEFGHIJKLMNOPRSTUVW".split("");
 
 // Bot dictionary — answers for each letter
 const BOT_ANSWERS = {
@@ -33,6 +33,8 @@ const BOT_ANSWERS = {
   R: { name: "Rachel", place: "Rome", animal: "Rabbit", thing: "Rope" },
   S: { name: "Sarah", place: "Sydney", animal: "Snake", thing: "Spoon" },
   T: { name: "Thomas", place: "Tokyo", animal: "Tiger", thing: "Table" },
+  U: { name: "Uma", place: "Utrecht", animal: "Urial", thing: "Umbrella" },
+  V: { name: "Victor", place: "Venice", animal: "Vulture", thing: "Vase" },
   W: { name: "William", place: "Warsaw", animal: "Whale", thing: "Watch" },
 };
 
@@ -57,6 +59,8 @@ const BOT_ANSWERS_ALT = {
   R: { name: "Robert", place: "Riyadh", animal: "Raccoon", thing: "Ring" },
   S: { name: "Samuel", place: "Seoul", animal: "Shark", thing: "Scissors" },
   T: { name: "Tanya", place: "Toronto", animal: "Turtle", thing: "Telescope" },
+  U: { name: "Ursula", place: "Ulaanbaatar", animal: "Urchin", thing: "Utensil" },
+  V: { name: "Vera", place: "Valencia", animal: "Viper", thing: "Violin" },
   W: { name: "Wendy", place: "Wellington", animal: "Wolf", thing: "Wallet" },
 };
 

@@ -197,11 +197,11 @@ export function applyAction(state, action) {
       for (const p of state.players) {
         if (p.score > best.score) best = p;
       }
-      // Check for tie
       const tied = state.players.filter((p) => p.score === best.score);
       if (tied.length > 1) {
-        state.winnerId = best.id; // first with highest score wins tie
-        pushLog(state, `Game over! ${best.name} wins with ${best.score} boxes!`);
+        state.winnerId = null; // draw
+        const names = tied.map((p) => p.name).join(" & ");
+        pushLog(state, `Game over! It's a draw between ${names} with ${best.score} boxes each!`);
       } else {
         state.winnerId = best.id;
         pushLog(state, `Game over! ${best.name} wins with ${best.score} boxes!`);

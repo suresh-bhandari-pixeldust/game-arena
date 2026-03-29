@@ -147,7 +147,8 @@ function applyClassicAction(state, action, playerIndex, mark) {
   if (result) {
     if (result.winner === "draw") {
       state.phase = "finished";
-      state.winnerId = "draw";
+      state.winnerId = null;
+      state.isDraw = true;
       pushLog(state, "It's a draw!");
     } else {
       state.phase = "finished";
@@ -213,9 +214,10 @@ function applySuperAction(state, action, playerIndex, mark) {
   if (metaResult) {
     if (metaResult.winner === "draw") {
       state.phase = "finished";
-      state.winnerId = "draw";
+      state.winnerId = null;
+      state.isDraw = true;
       pushLog(state, "The game is a draw!");
-    } else if (metaResult.winner !== "draw") {
+    } else {
       const winner = state.players.find((p) => p.mark === metaResult.winner);
       state.phase = "finished";
       state.winnerId = winner ? winner.id : null;

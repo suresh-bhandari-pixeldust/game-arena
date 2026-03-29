@@ -715,7 +715,7 @@ button:disabled {
 .toss-btn.odd-btn {
   background: linear-gradient(135deg, #2c3e50, #34495e);
   color: var(--cream);
-  border: 2px solid rgba(245, 222, 179, 0.3);
+  border: 2px solid rgba(245, 222, 179, 0.6);
 }
 
 .toss-btn.odd-btn:hover:not(:disabled) {
@@ -727,7 +727,7 @@ button:disabled {
 .toss-btn.even-btn {
   background: linear-gradient(135deg, var(--cricket-green), #228b22);
   color: #fff;
-  border: 2px solid rgba(46, 204, 113, 0.3);
+  border: 2px solid rgba(46, 204, 113, 0.6);
 }
 
 .toss-btn.even-btn:hover:not(:disabled) {

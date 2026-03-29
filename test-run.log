@@ -1,0 +1,220 @@
+
+Running 132 tests using 1 worker
+
+[1A[2K[1/132] [chromium-desktop] › tests/e2e-board-card.spec.js:97:3 › Dots and Boxes › should render correctly on desktop
+[1A[2K[chromium-desktop] › tests/e2e-board-card.spec.js:97:3 › Dots and Boxes › should render correctly on desktop
+Screenshot: dots-and-boxes_setup-screen_desktop_2026-03-18T11-48-14-813Z.png
+
+[1A[2K[2/132] [chromium-desktop] › tests/e2e-board-card.spec.js:116:3 › Dots and Boxes › should render correctly on mobile
+[1A[2K[chromium-desktop] › tests/e2e-board-card.spec.js:116:3 › Dots and Boxes › should render correctly on mobile
+Screenshot: dots-and-boxes_setup-mobile_mobile_2026-03-18T11-48-14-925Z.png
+
+[1A[2K[3/132] [chromium-desktop] › tests/e2e-board-card.spec.js:129:3 › Dots and Boxes › should initialize game with correct player count
+[1A[2K[4/132] [chromium-desktop] › tests/e2e-board-card.spec.js:141:3 › Dots and Boxes › should verify grid size options
+[1A[2K[5/132] [chromium-desktop] › tests/e2e-board-card.spec.js:153:3 › Dots and Boxes › should start local game and display board
+[1A[2K[chromium-desktop] › tests/e2e-board-card.spec.js:153:3 › Dots and Boxes › should start local game and display board
+Screenshot: dots-and-boxes_gameplay_desktop_2026-03-18T11-48-15-312Z.png
+
+[1A[2K[6/132] [chromium-desktop] › tests/e2e-board-card.spec.js:169:3 › Dots and Boxes › should display turn information during gameplay
+[1A[2K[7/132] [chromium-desktop] › tests/e2e-board-card.spec.js:181:3 › Dots and Boxes › should track and display scoreboard
+[1A[2K[8/132] [chromium-desktop] › tests/e2e-board-card.spec.js:190:3 › Dots and Boxes › should allow clicking lines to draw
+[1A[2K  1) [chromium-desktop] › tests/e2e-board-card.spec.js:190:3 › Dots and Boxes › should allow clicking lines to draw 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: page.click: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[role="button"], line')[22m
+    [2m    - locator resolved to 40 elements. Proceeding with the first one: <line x1="6" y1="6" y2="6" x2="86" cursor="pointer" stroke-width="16" data-line="h:0:0" class="line-hitarea" stroke-linecap="round" stroke="rgba(255,255,255,0.08)"></line>[22m
+    [2m  - attempting click action[22m
+    [2m    2 × waiting for element to be visible, enabled and stable[22m
+    [2m      - element is not visible[22m
+    [2m    - retrying click action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible, enabled and stable[22m
+    [2m      - element is not visible[22m
+    [2m    - retrying click action[22m
+    [2m      - waiting 100ms[22m
+    [2m    57 × waiting for element to be visible, enabled and stable[22m
+    [2m       - element is not visible[22m
+    [2m     - retrying click action[22m
+    [2m       - waiting 500ms[22m
+
+
+      204 |
+      205 |       if (box) {
+    > 206 |         await page.click(`[role="button"], line`, {
+          |                    ^
+      207 |           position: { x: box.width / 2, y: box.height / 2 }
+      208 |         });
+      209 |       }
+        at /Users/sureshbhandari/Work/game-arena/tests/e2e-board-card.spec.js:206:20
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/e2e-board-card-Dots-and-Bo-df59b-llow-clicking-lines-to-draw-chromium-desktop/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/e2e-board-card-Dots-and-Bo-df59b-llow-clicking-lines-to-draw-chromium-desktop/error-context.md
+
+
+[1A[2K[9/132] [chromium-desktop] › tests/e2e-board-card.spec.js:217:3 › Dots and Boxes › should respond to New Game button
+[1A[2K  2) [chromium-desktop] › tests/e2e-board-card.spec.js:217:3 › Dots and Boxes › should respond to New Game button 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator:  locator('.scoreboard')
+    Expected: visible
+    Received: hidden
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('.scoreboard')[22m
+    [2m    9 × locator resolved to <div id="scoreboard" class="scoreboard">…</div>[22m
+    [2m      - unexpected value "hidden"[22m
+
+
+      226 |       // Game should restart, scoreboard should reset or show new state
+      227 |       const scoreboard = page.locator('.scoreboard');
+    > 228 |       await expect(scoreboard).toBeVisible();
+          |                                ^
+      229 |     }
+      230 |   });
+      231 |
+        at /Users/sureshbhandari/Work/game-arena/tests/e2e-board-card.spec.js:228:32
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/e2e-board-card-Dots-and-Bo-821aa--respond-to-New-Game-button-chromium-desktop/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/e2e-board-card-Dots-and-Bo-821aa--respond-to-New-Game-button-chromium-desktop/error-context.md
+
+
+[1A[2K[10/132] [chromium-desktop] › tests/e2e-board-card.spec.js:232:3 › Dots and Boxes › should handle spectator mode
+[1A[2K[11/132] [chromium-desktop] › tests/e2e-board-card.spec.js:252:3 › Raja Mantri Chor Sipahi › should render correctly on desktop
+[1A[2K[chromium-desktop] › tests/e2e-board-card.spec.js:252:3 › Raja Mantri Chor Sipahi › should render correctly on desktop
+Screenshot: raja-mantri-chor-sipahi_setup-screen_desktop_2026-03-18T11-48-52-573Z.png
+
+[1A[2K[12/132] [chromium-desktop] › tests/e2e-board-card.spec.js:260:3 › Raja Mantri Chor Sipahi › should render correctly on mobile
+[1A[2K[chromium-desktop] › tests/e2e-board-card.spec.js:260:3 › Raja Mantri Chor Sipahi › should render correctly on mobile
+Screenshot: raja-mantri-chor-sipahi_setup-mobile_mobile_2026-03-18T11-48-52-798Z.png
+
+[1A[2K[13/132] [chromium-desktop] › tests/e2e-board-card.spec.js:268:3 › Raja Mantri Chor Sipahi › should start game and deal roles to players
+[1A[2K  3) [chromium-desktop] › tests/e2e-board-card.spec.js:268:3 › Raja Mantri Chor Sipahi › should start game and deal roles to players 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.textContent: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('#playerCount')[22m
+
+
+      271 |     // Set number of opponents
+      272 |     const playerCount = page.locator('#playerCount');
+    > 273 |     const currentCount = await playerCount.textContent();
+          |                                            ^
+      274 |
+      275 |     // Ensure at least 2 other players (3 total)
+      276 |     if (parseInt(currentCount) < 2) {
+        at /Users/sureshbhandari/Work/game-arena/tests/e2e-board-card.spec.js:273:44
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/e2e-board-card-Raja-Mantri-17e7f-e-and-deal-roles-to-players-chromium-desktop/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/e2e-board-card-Raja-Mantri-17e7f-e-and-deal-roles-to-players-chromium-desktop/error-context.md
+
+
+[1A[2K[14/132] [chromium-desktop] › tests/e2e-board-card.spec.js:289:3 › Raja Mantri Chor Sipahi › should display game phase information
+[1A[2K[15/132] [chromium-desktop] › tests/e2e-board-card.spec.js:298:3 › Raja Mantri Chor Sipahi › should track score for all players
+[1A[2K[16/132] [chromium-desktop] › tests/e2e-board-card.spec.js:307:3 › Raja Mantri Chor Sipahi › should have game logs visible
+[1A[2K[17/132] [chromium-desktop] › tests/e2e-board-card.spec.js:327:3 › WWE Trump Cards › should render correctly on desktop
+[1A[2K[chromium-desktop] › tests/e2e-board-card.spec.js:327:3 › WWE Trump Cards › should render correctly on desktop
+Screenshot: wwe-trump-cards_setup-screen_desktop_2026-03-18T11-49-24-406Z.png
+
+[1A[2K[18/132] [chromium-desktop] › tests/e2e-board-card.spec.js:335:3 › WWE Trump Cards › should render correctly on mobile
+[1A[2K[chromium-desktop] › tests/e2e-board-card.spec.js:335:3 › WWE Trump Cards › should render correctly on mobile
+Screenshot: wwe-trump-cards_setup-mobile_mobile_2026-03-18T11-49-24-553Z.png
+
+[1A[2K[19/132] [chromium-desktop] › tests/e2e-board-card.spec.js:343:3 › WWE Trump Cards › should start game and display wrestler cards
+[1A[2K  4) [chromium-desktop] › tests/e2e-board-card.spec.js:343:3 › WWE Trump Cards › should start game and display wrestler cards 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('button:has-text("Start Game")').first()[22m
+
+
+      85 |   // Click "Start Game" button
+      86 |   const startButton = page.locator('button:has-text("Start Game")').first();
+    > 87 |   await startButton.click();
+         |                     ^
+      88 |
+      89 |   // Wait for game panel to be visible
+      90 |   await page.waitForSelector('[id*="gamePanel"]', { timeout: 10000 });
+        at startLocalGame (/Users/sureshbhandari/Work/game-arena/tests/e2e-board-card.spec.js:87:21)
+        at /Users/sureshbhandari/Work/game-arena/tests/e2e-board-card.spec.js:346:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/e2e-board-card-WWE-Trump-C-81d64--and-display-wrestler-cards-chromium-desktop/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/e2e-board-card-WWE-Trump-C-81d64--and-display-wrestler-cards-chromium-desktop/error-context.md
+
+
+[1A[2K[20/132] [chromium-desktop] › tests/e2e-board-card.spec.js:358:3 › WWE Trump Cards › should verify card content and stats
+[1A[2K  5) [chromium-desktop] › tests/e2e-board-card.spec.js:358:3 › WWE Trump Cards › should verify card content and stats 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('button:has-text("Start Game")').first()[22m
+
+
+      85 |   // Click "Start Game" button
+      86 |   const startButton = page.locator('button:has-text("Start Game")').first();
+    > 87 |   await startButton.click();
+         |                     ^
+      88 |
+      89 |   // Wait for game panel to be visible
+      90 |   await page.waitForSelector('[id*="gamePanel"]', { timeout: 10000 });
+        at startLocalGame (/Users/sureshbhandari/Work/game-arena/tests/e2e-board-card.spec.js:87:21)
+        at /Users/sureshbhandari/Work/game-arena/tests/e2e-board-card.spec.js:361:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/e2e-board-card-WWE-Trump-C-73e05-rify-card-content-and-stats-chromium-desktop/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/e2e-board-card-WWE-Trump-C-73e05-rify-card-content-and-stats-chromium-desktop/error-context.md
+
+
+[1A[2K[21/132] [chromium-desktop] › tests/e2e-board-card.spec.js:374:3 › WWE Trump Cards › should handle stat selection and comparison
+[1A[2K  6) [chromium-desktop] › tests/e2e-board-card.spec.js:374:3 › WWE Trump Cards › should handle stat selection and comparison 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('button:has-text("Start Game")').first()[22m
+
+
+      85 |   // Click "Start Game" button
+      86 |   const startButton = page.locator('button:has-text("Start Game")').first();
+    > 87 |   await startButton.click();
+         |                     ^
+      88 |
+      89 |   // Wait for game panel to be visible
+      90 |   await page.waitForSelector('[id*="gamePanel"]', { timeout: 10000 });
+        at startLocalGame (/Users/sureshbhandari/Work/game-arena/tests/e2e-board-card.spec.js:87:21)
+        at /Users/sureshbhandari/Work/game-arena/tests/e2e-board-card.spec.js:377:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/e2e-board-card-WWE-Trump-C-55763-at-selection-and-comparison-chromium-desktop/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/e2e-board-card-WWE-Trump-C-55763-at-selection-and-comparison-chromium-desktop/error-context.md
+
+
+[1A[2K[22/132] [chromium-desktop] › tests/e2e-board-card.spec.js:397:3 › WWE Trump Cards › should display winner information

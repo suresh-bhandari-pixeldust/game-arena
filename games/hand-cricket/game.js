@@ -206,16 +206,10 @@ export function applyAction(state, action) {
         const firstBatter = state.players.find((p) => p.id === state.currentBowlerId);
         const secondBatter = batter;
 
-        if (secondBatter.score >= state.target) {
-          // Already surpassed target on this ball? No — they're out, but let's check score
-          // Actually they're out, so first innings batter wins
-          state.winnerId = firstBatter.id;
-        } else {
-          state.winnerId = firstBatter.id;
-        }
+        state.winnerId = firstBatter.id;
         state.phase = "finished";
         const winner = state.players.find((p) => p.id === state.winnerId);
-        const margin = state.target - 1 - secondBatter.score;
+        const margin = (state.target - 1) - secondBatter.score;
         pushLog(state, `${winner.name} wins by ${margin} run${margin !== 1 ? "s" : ""}!`);
       }
     } else {

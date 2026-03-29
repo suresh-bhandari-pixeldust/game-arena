@@ -9,7 +9,9 @@ import {
   JAIL_POSITION,
   JAIL_FINE,
   MAX_HOUSES,
+  HOTEL_LEVEL,
   STARTING_MONEY,
+  ROLL_TO_START,
   ownsFullGroup,
   getPropertiesInGroup,
   calculateRent,
@@ -55,7 +57,7 @@ const GROUP_COLORS = {
   red: "#DC143C",
   yellow: "#FFD700",
   green: "#228B22",
-  darkBlue: "#4169E1",
+  darkBlue: "#00008B",
 };
 
 // ================================================
@@ -365,16 +367,18 @@ function renderBoard(state) {
       text.setAttribute("y", cy + 0.5);
       if (space.type === "go") text.textContent = "START";
       else if (space.type === "jail") text.textContent = "JAIL";
-      else if (space.type === "free_parking") text.textContent = "FREE";
+      else if (space.type === "rest_house") text.textContent = "REST";
       else if (space.type === "go_to_jail") text.textContent = "GO JAIL";
     } else {
       // Truncate long names
       let label = space.name;
       if (label.length > 8) label = label.slice(0, 7) + ".";
 
-      if (space.type === "luck") label = "LUCK";
-      else if (space.type === "social_service") label = "SOC.SVC";
-      else if (space.type === "tax") label = space.name.includes("Income") ? "TAX" : "LUX.TAX";
+      if (space.type === "chance") label = "CHANCE";
+      else if (space.type === "community") label = "CHEST";
+      else if (space.type === "tax") label = "TAX";
+      else if (space.type === "wealth_tax") label = "W.TAX";
+      else if (space.type === "rest_house") label = "REST";
 
       text.setAttribute("x", cx);
       text.setAttribute("y", cy + 0.5);
@@ -384,7 +388,7 @@ function renderBoard(state) {
     svg.appendChild(text);
 
     // Price text for buyable properties
-    if (["property", "railway", "utility"].includes(space.type)) {
+    if (["property", "transport", "utility"].includes(space.type)) {
       const prop = state.properties[i];
       const priceText = document.createElementNS("http://www.w3.org/2000/svg", "text");
       priceText.setAttribute("text-anchor", "middle");
@@ -420,7 +424,7 @@ function renderBoard(state) {
                        coords.side === "right" ? coords.x + 0.5 :
                        coords.x + 0.5;
 
-        if (prop.houses === 5) {
+        if (prop.houses === HOTEL_LEVEL) {
           // Hotel
           const hotel = document.createElementNS("http://www.w3.org/2000/svg", "rect");
           hotel.setAttribute("x", cx - 1.5);
@@ -557,7 +561,11 @@ function render() {
     const winner = state.players.find((p) => p.id === state.winnerId);
     ui.turnHint.textContent = winner ? `${winner.name} wins!` : "Game over.";
   } else if (currentPlayer?.inJail && isMyTurn) {
-    ui.turnHint.textContent = "You're in Jail! Pay fine, use card, or try rolling doubles.";
+    ui.turnHint.textContent = `You're in Jail! Pay ₹${JAIL_FINE} fine, use card, or try rolling doubles.`;
+  } else if (state.turnPhase === "pre_roll" && isMyTurn && !currentPlayer?.started) {
+    ui.turnHint.textContent = "Roll 12 (double sixes) to start!";
+  } else if (state.turnPhase === "pre_roll" && isMyTurn && currentPlayer?.skipNextTurn) {
+    ui.turnHint.textContent = "Resting... (skipping this turn)";
   } else if (state.turnPhase === "pre_roll" && isMyTurn) {
     ui.turnHint.textContent = "Roll the dice!";
   } else if (state.turnPhase === "awaiting_buy" && isMyTurn) {
@@ -693,12 +701,22 @@ function render() {
     ui.sidebarLogs.appendChild(div);
   });
 
+  // Auto-end turn for human when there's nothing to do (e.g., failed roll-to-start)
+  if (mode === "local" && state.phase === "playing" && isMyTurn && state.turnPhase === "post_roll" && !currentPlayer.started) {
+    if (botTimeout) clearTimeout(botTimeout);
+    botTimeout = setTimeout(() => {
+      if (!localState || localState.phase !== "playing") return;
+      dispatchAction({ type: "end_turn", playerId: viewingId });
+    }, 400);
+  }
   // Bot automation
-  if (mode === "local" && state.phase === "playing") {
+  else if (mode === "local" && state.phase === "playing") {
     const cp = state.players[state.currentPlayerIndex];
     if (cp && (cp.isBot || (cp.id === viewingId && autoPlay))) {
       if (botTimeout) clearTimeout(botTimeout);
-      const delay = cp.isBot ? 1200 : 600;
+      // Faster during pre-start phase (nothing interesting is happening)
+      const preStart = !cp.started;
+      const delay = cp.isBot ? (preStart ? 400 : 1200) : 600;
       botTimeout = setTimeout(() => {
         if (!localState || localState.phase !== "playing") return;
         const botAction = getBotMove(localState, localState.currentPlayerIndex);
@@ -725,11 +743,11 @@ function renderPropertyPanel(state, viewingId) {
     div.className = `prop-item ${prop.mortgaged ? "mortgaged" : ""}`;
 
     const colorHex = space.group ? GROUP_COLORS[space.group] :
-                     space.type === "railway" ? "#888" : "#4488aa";
+                     space.type === "transport" ? "#888" : "#4488aa";
 
     let housesHtml = "";
     if (space.type === "property" && prop.houses > 0) {
-      if (prop.houses === 5) {
+      if (prop.houses === HOTEL_LEVEL) {
         housesHtml = `<div class="prop-houses"><div class="hotel-dot"></div></div>`;
       } else {
         housesHtml = `<div class="prop-houses">${Array(prop.houses).fill('<div class="house-dot"></div>').join("")}</div>`;
@@ -755,7 +773,7 @@ function renderPropertyPanel(state, viewingId) {
       const actions = document.createElement("div");
       actions.className = "prop-actions";
 
-      if (isMyTurn && space.type === "property" && !prop.mortgaged && ownsFullGroup(state, viewingId, space.group) && prop.houses < MAX_HOUSES) {
+      if (isMyTurn && space.type === "property" && !prop.mortgaged && ownsFullGroup(state, viewingId, space.group) && prop.houses < HOTEL_LEVEL) {
         const cost = COLOR_GROUPS[space.group].houseCost;
         const buildBtn = document.createElement("button");
         buildBtn.className = "primary";

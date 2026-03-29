@@ -1,6 +1,6 @@
 import { createServer } from "http";
 import { readFile } from "fs/promises";
-import { extname, join } from "path";
+import { extname, join, resolve, normalize } from "path";
 import { fileURLToPath } from "url";
 import WebSocket, { WebSocketServer } from "ws";
 
@@ -49,12 +49,30 @@ const MIME_TYPES = {
   ".json": "application/json",
   ".png": "image/png",
   ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".webp": "image/webp",
   ".svg": "image/svg+xml",
   ".ico": "image/x-icon",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+  ".ttf": "font/ttf",
+  ".mp3": "audio/mpeg",
+  ".wav": "audio/wav",
+  ".mp4": "video/mp4",
+  ".webm": "video/webm",
 };
 
 const httpServer = createServer(async (req, res) => {
-  let filePath = join(__dirname, req.url === "/" ? "index.html" : req.url);
+  // Strip query string and decode URI
+  const urlPath = decodeURIComponent(req.url.split("?")[0]);
+  let filePath = resolve(join(__dirname, urlPath === "/" ? "index.html" : urlPath));
+  // Prevent path traversal — resolved path must be within __dirname
+  if (!filePath.startsWith(__dirname)) {
+    res.writeHead(403, { "Content-Type": "text/plain" });
+    res.end("Forbidden");
+    return;
+  }
   const ext = extname(filePath);
   const contentType = MIME_TYPES[ext] || "application/octet-stream";
   try {
@@ -72,6 +90,20 @@ httpServer.listen(PORT);
 
 const rooms = new Map();
 let clientCounter = 0;
+
+// Clean up stale rooms every 10 minutes (rooms older than 1 hour with no human players)
+const ROOM_TTL_MS = 60 * 60 * 1000;
+setInterval(() => {
+  const now = Date.now();
+  for (const [code, room] of rooms) {
+    const hasHumans = Array.from(room.clients.values()).some((c) => c.ws);
+    const age = now - (room.createdAt || 0);
+    if (!hasHumans && age > ROOM_TTL_MS) {
+      if (room.turnTimer) clearTimeout(room.turnTimer);
+      rooms.delete(code);
+    }
+  }
+}, 10 * 60 * 1000);
 
 function send(ws, payload) {
   if (ws.readyState === WebSocket.OPEN) {
@@ -119,9 +151,8 @@ function broadcastGame(room) {
     }
   });
 
-  // Bot & Timer logic
-  const activePhases = ["playing", "picking", "revealing"];
-  if (room.state && activePhases.includes(room.state.phase)) {
+  // Bot & Timer logic — run for any phase that isn't finished
+  if (room.state && room.state.phase !== "finished") {
     const engine = getEngine(room);
     const currentPlayer = room.state.players[room.state.currentPlayerIndex];
 
@@ -130,9 +161,9 @@ function broadcastGame(room) {
     const now = Date.now();
     const timeLeft = (room.turnEndTime || Date.now() + TURN_DURATION_MS) - now;
 
-    if (currentPlayer.isBot && engine.getBotMove) {
+    if (currentPlayer && currentPlayer.isBot && engine.getBotMove) {
       room.turnTimer = setTimeout(() => {
-        if (!room.state || room.state.phase !== "playing") return;
+        if (!room.state || room.state.phase === "finished") return;
         const botAction = engine.getBotMove(room.state, room.state.currentPlayerIndex);
         if (botAction) {
           engine.applyAction(room.state, botAction);
@@ -142,7 +173,7 @@ function broadcastGame(room) {
       }, 1500);
     } else if (currentPlayer && !currentPlayer.isBot) {
       room.turnTimer = setTimeout(() => {
-        if (!room.state || room.state.phase !== "playing") return;
+        if (!room.state || room.state.phase === "finished") return;
         if (engine.getBotMove) {
           const botAction = engine.getBotMove(room.state, room.state.currentPlayerIndex);
           if (botAction) {
@@ -247,6 +278,7 @@ wss.on("connection", (ws) => {
           clients: new Map(),
           state: null,
           gameType,
+          createdAt: Date.now(),
         });
       }
 
@@ -325,16 +357,16 @@ wss.on("connection", (ws) => {
       bingo: ["call_number", "mark_cell", "claim_bingo"],
       "wwe-trump-cards": ["pick_stat", "draw_card"],
       "football-trump-cards": ["pick_stat", "draw_card"],
-      "hand-cricket": ["pick_number"],
+      "hand-cricket": ["toss_call", "toss_number", "choose_role", "choose_number"],
       "book-cricket": ["open_page"],
       flames: ["submit_names", "next_step"],
       "tic-tac-toe": ["place_mark"],
       "dots-and-boxes": ["draw_line"],
       "name-place-animal-thing": ["submit_answers", "start_round"],
       "raja-mantri-chor-sipahi": ["reveal_raja", "guess_chor", "next_round"],
-      atlas: ["submit_word"],
+      atlas: ["submit_word", "pass", "timeout"],
       ludo: ["roll_dice", "move_token"],
-      "pen-fight": ["flick"],
+      "pen-fight": ["flick", "endTurn"],
       business: [
         "roll_dice", "buy_property", "decline_property", "build_house",
         "sell_house", "mortgage_property", "unmortgage_property",
@@ -344,10 +376,12 @@ wss.on("connection", (ws) => {
 
     const allowedActions = gameActions[room.gameType] || gameActions.uno;
     if (allowedActions.includes(message.type)) {
-      const result = engine.applyAction(room.state, {
-        ...message,
-        playerId: clientId,
-      });
+      const action = { ...message, playerId: clientId };
+      // Prevent book-cricket cheating: strip client-supplied page number
+      if (room.gameType === "book-cricket" && action.page !== undefined) {
+        delete action.page;
+      }
+      const result = engine.applyAction(room.state, action);
       if (result.error) {
         send(ws, { type: "error", message: result.error });
         return;

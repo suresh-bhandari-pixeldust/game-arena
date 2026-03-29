@@ -70,7 +70,8 @@ function scoreRound(state, mantriCorrect) {
 export function createGame({ players, options = {} }) {
   const totalRounds = (options && options.totalRounds) || 5;
 
-  const gamePlayers = players.map((player) => ({
+  // Cap at 4 players — RMCS has exactly 4 roles
+  const gamePlayers = players.slice(0, 4).map((player) => ({
     id: player.id,
     name: player.name,
     isBot: Boolean(player.isBot),
@@ -79,7 +80,7 @@ export function createGame({ players, options = {} }) {
     score: 0,
   }));
 
-  // Ensure exactly 4 players
+  // Fill remaining slots with bots to ensure exactly 4 players
   while (gamePlayers.length < 4) {
     const botIndex = gamePlayers.length;
     const botNames = ["Akbar", "Birbal", "Tenali", "Chanakya", "Shakuni", "Vikram"];

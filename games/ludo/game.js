@@ -152,6 +152,7 @@ export function createGame({ players, options = {} }) {
     winnerId: null,
     diceValue: null,
     extraTurn: false,
+    consecutiveSixes: 0,
     movableTokens: [],
     log: [],
     options,
@@ -182,6 +183,29 @@ export function applyAction(state, action) {
     state.diceValue = dice;
 
     pushLog(state, `${currentPlayer.name} rolled a ${dice}`);
+
+    // Three consecutive 6s rule: forfeit turn and send all tokens back to base
+    if (dice === 6) {
+      state.consecutiveSixes = (state.consecutiveSixes || 0) + 1;
+      if (state.consecutiveSixes >= 3) {
+        pushLog(state, `${currentPlayer.name} rolled three 6s in a row! Turn forfeited.`);
+        state.consecutiveSixes = 0;
+        state.diceValue = null;
+        state.movableTokens = [];
+        state.extraTurn = false;
+        state.subPhase = "roll_dice";
+        const next = nextPlayerIndex(state, state.currentPlayerIndex);
+        if (next >= 0) {
+          state.currentPlayerIndex = next;
+          pushLog(state, `${state.players[next].name}'s turn.`);
+        } else {
+          checkGameEnd(state);
+        }
+        return { state };
+      }
+    } else {
+      state.consecutiveSixes = 0;
+    }
 
     // Check if any token can move
     const movable = getMovableTokens(state, state.currentPlayerIndex, dice);
@@ -300,6 +324,7 @@ export function applyAction(state, action) {
       if (captured && !gotSix) pushLog(state, `${currentPlayer.name} captured — extra turn!`);
     } else {
       state.extraTurn = false;
+      state.consecutiveSixes = 0;
       state.subPhase = "roll_dice";
       const next = nextPlayerIndex(state, state.currentPlayerIndex);
       if (next >= 0) {

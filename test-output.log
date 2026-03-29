@@ -1,0 +1,23 @@
+SyntaxError: /Users/sureshbhandari/Work/game-arena/tests/e2e-hub-uno-bingo.spec.js: Unexpected token, expected "," (565:25)
+
+  563 |
+  564 |     // Navigate to game
+> 565 |     await page.goto(href as string);
+      |                          ^
+  566 |     await page.waitForLoadState('networkidle');
+  567 |     await page.screenshot({ path: 'tests/screenshots/17-edge-nav-game.png' });
+  568 |
+
+   at e2e-hub-uno-bingo.spec.js:565
+
+  563 |
+  564 |     // Navigate to game
+> 565 |     await page.goto(href as string);
+      |                         ^
+  566 |     await page.waitForLoadState('networkidle');
+  567 |     await page.screenshot({ path: 'tests/screenshots/17-edge-nav-game.png' });
+  568 |
+Error: No tests found.
+Make sure that arguments are regular expressions matching test files.
+You may need to escape symbols like "$" or "*" and quote the arguments.
+

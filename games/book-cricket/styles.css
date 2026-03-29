@@ -1414,6 +1414,10 @@ button:disabled {
   .out-text {
     font-size: 4rem;
   }
+
+  .ball-history {
+    margin-bottom: 60px;
+  }
 }
 
 /* Prevent sticky hover on touch devices */

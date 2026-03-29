@@ -1187,6 +1187,10 @@ button:disabled {
   .winner-banner .trophy {
     font-size: 3.5rem;
   }
+
+  .toggle-logs-btn {
+    bottom: max(70px, calc(env(safe-area-inset-bottom, 20px) + 50px));
+  }
 }
 
 /* Prevent sticky hover on touch devices */

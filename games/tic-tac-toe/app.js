@@ -345,7 +345,7 @@ function render() {
     ui.turnName.textContent = `${currentPlayer?.name || "?"}${markLabel}`;
     ui.turnHint.textContent = `Waiting for ${currentPlayer?.name}...`;
   } else if (state.phase === "finished") {
-    if (state.winnerId === "draw") {
+    if (state.isDraw || (!state.winnerId && state.phase === "finished")) {
       ui.turnName.textContent = "Draw!";
       ui.turnHint.textContent = "No one wins this round.";
     } else {
@@ -394,7 +394,7 @@ function render() {
   // Winner banner
   if (state.phase === "finished") {
     ui.winnerBanner.classList.remove("hidden");
-    if (state.winnerId === "draw") {
+    if (state.isDraw || (!state.winnerId && state.phase === "finished")) {
       ui.winnerName.textContent = "It's a Draw!";
       ui.winnerSubtext.textContent = "Neither player managed three in a row.";
     } else {

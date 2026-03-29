@@ -4,6 +4,10 @@ const WILDS = ["wild", "wild4"];
 
 let cardCounter = 0;
 
+function resetCardCounter() {
+  cardCounter = 0;
+}
+
 function nextCardId() {
   cardCounter += 1;
   return `c${cardCounter}`;
@@ -147,6 +151,8 @@ function applyAutoUnoPenalty(state, actingPlayerId) {
 }
 
 export function createGame({ players, options = {} }) {
+  resetCardCounter();
+
   const config = {
     enforceWildDrawFour: Boolean(options.enforceWildDrawFour),
     unoPenalty: options.unoPenalty !== false,
@@ -392,7 +398,9 @@ export function applyAction(state, action) {
     }
     const drawn = drawCards(state, playerIndex, 1);
     if (drawn.length === 0) {
-      return { state, error: "No cards left to draw." };
+      pushLog(state, "No cards left to draw. Turn passes.");
+      advanceTurn(state);
+      return { state };
     }
     const drawnCard = drawn[0];
     pushLog(state, `${state.players[playerIndex].name} draws a card.`);
